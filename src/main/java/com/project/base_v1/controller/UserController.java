@@ -8,6 +8,7 @@ import com.project.base_v1.dto.response.user.UserResponse;
 import com.project.base_v1.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -64,22 +65,29 @@ public class UserController {
             summary = "Search users",
             description = """
                         Search users by keyword, role and status.
-                        <br/>
-                        <b>ADMIN only</b>
+                    
                     """
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Search success"),
             @ApiResponse(responseCode = "403", description = "Access denied")
     })
-    @GetMapping("/search")
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
     public ApiResponseSever<Page<UserResponse>> search(
             @Parameter(
                     description = "Search by username or email",
-                    example = "admin"
+                    examples = @ExampleObject(
+                            value = """
+                                    {
+                                      "keyword": "admin",
+                                      "role": "ADMIN",
+                                      "status": "ACTIVE"
+                                    }
+                                    """
+                    )
             )
             UserSearchRequest request,
-
             @Parameter(hidden = true)
             Pageable pageable
     ) {

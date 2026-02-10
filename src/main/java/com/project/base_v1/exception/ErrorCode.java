@@ -14,6 +14,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(10404, HttpStatus.NOT_FOUND, "User not found"),
     RESOURCE_NOT_FOUND(11404, HttpStatus.NOT_FOUND, "Resource not found"),
     PATIENT_NOT_FOUND(12404, HttpStatus.NOT_FOUND, "Patient not found"),
+    MEDICAL_RECORD_NOT_FOUND(13404, HttpStatus.NOT_FOUND, "Medical Record not found"),
 
     TOO_MANY_REQUESTS(10429, HttpStatus.TOO_MANY_REQUESTS, "Too many requests"),
 

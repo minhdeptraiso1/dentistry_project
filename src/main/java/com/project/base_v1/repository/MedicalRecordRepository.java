@@ -1,0 +1,31 @@
+package com.project.base_v1.repository;
+
+import com.project.base_v1.entity.MedicalRecord;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.Optional;
+import java.util.UUID;
+
+public interface MedicalRecordRepository
+        extends JpaRepository<MedicalRecord, UUID>, JpaSpecificationExecutor<MedicalRecord> {
+
+    @Query("""
+                SELECT m.recordCode
+                FROM MedicalRecord m
+                ORDER BY m.recordCode DESC
+                LIMIT 1
+            """)
+    Optional<String> findLatestRecordCode();
+
+    @Query("""
+                SELECT m
+                FROM MedicalRecord m
+                JOIN FETCH m.patient p
+                JOIN FETCH m.doctor d
+                WHERE m.id = :id
+            """)
+    Optional<MedicalRecord> findDetailById(@Param("id") UUID id);
+}
