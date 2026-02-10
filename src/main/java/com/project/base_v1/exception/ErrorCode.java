@@ -10,7 +10,11 @@ public enum ErrorCode {
     TOKEN_REVOKED(10403, HttpStatus.UNAUTHORIZED, "Token revoked"),
     ACCESS_DENIED(10403, HttpStatus.FORBIDDEN, "Access denied"),
     BAD_REQUEST(10400, HttpStatus.BAD_REQUEST, "Bad request"),
+
     USER_NOT_FOUND(10404, HttpStatus.NOT_FOUND, "User not found"),
+    RESOURCE_NOT_FOUND(11404, HttpStatus.NOT_FOUND, "Resource not found"),
+    PATIENT_NOT_FOUND(12404, HttpStatus.NOT_FOUND, "Patient not found"),
+
     TOO_MANY_REQUESTS(10429, HttpStatus.TOO_MANY_REQUESTS, "Too many requests"),
 
     // ==== SYSTEM (5xxxx) ====

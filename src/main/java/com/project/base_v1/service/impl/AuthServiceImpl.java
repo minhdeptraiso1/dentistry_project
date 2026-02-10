@@ -46,7 +46,6 @@ public class AuthServiceImpl implements AuthService {
 
         String rateKey = "login:" + request.username();
 
-        // 1️⃣ RATE LIMIT
         loginRateLimiter.check(rateKey);
 
         try {
@@ -57,14 +56,11 @@ public class AuthServiceImpl implements AuthService {
                     )
             );
         } catch (BadCredentialsException ex) {
-            // ❌ sai username / password
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         } catch (DisabledException ex) {
-            // ❌ user bị khóa
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
 
-        // 2️⃣ LOGIN OK → RESET RATE LIMIT
         loginRateLimiter.reset(rateKey);
 
         User user = userRepository.findByUsername(request.username())
@@ -72,7 +68,6 @@ public class AuthServiceImpl implements AuthService {
                         new BusinessException(ErrorCode.INVALID_CREDENTIALS)
                 );
 
-        // 3️⃣ TẠO SESSION (REFRESH TOKEN)
         TokenSession session = TokenSession.builder()
                 .id(UUID.randomUUID())
                 .userId(user.getId())
@@ -86,7 +81,6 @@ public class AuthServiceImpl implements AuthService {
         session.setRefreshToken(refreshToken);
         tokenSessionRepository.save(session);
 
-        // 4️⃣ TẠO ACCESS TOKEN
         String accessToken =
                 jwtTokenProvider.generateAccessToken(
                         user.getId(),
@@ -134,15 +128,13 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void logout(String accessToken, String refreshToken) {
 
-        // 1️⃣ REVOKE ACCESS TOKEN (REDIS)
-
 
         tokenBlacklistService.revoke(
                 accessToken,
                 Duration.ofMinutes(15)
         );
 
-        // 2️⃣ REVOKE REFRESH TOKEN (DB)
+
         tokenSessionRepository.findByRefreshToken(refreshToken)
                 .ifPresent(session -> {
                     session.setRevoked(true);
