@@ -49,6 +49,19 @@ public enum ErrorCode {
     INVALID_QUANTITY(107006, HttpStatus.BAD_REQUEST, "Invalid quantity"),
     INVALID_PRICE(107007, HttpStatus.BAD_REQUEST, "Invalid price"),
 
+
+    // ===================== INVOICE/PAYMENT (108xxx) =====================
+    INVOICE_NOT_FOUND(108001, HttpStatus.NOT_FOUND, "Invoice not found"),
+    INVOICE_ITEM_NOT_FOUND(108002, HttpStatus.NOT_FOUND, "Invoice item not found"),
+    PAYMENT_NOT_FOUND(108003, HttpStatus.NOT_FOUND, "Payment not found"),
+
+    INVOICE_INVALID_STATUS(108004, HttpStatus.BAD_REQUEST, "Invalid invoice status"),
+    INVOICE_LOCKED(108005, HttpStatus.BAD_REQUEST, "Invoice is locked"),
+    INVOICE_ITEMS_REQUIRED(108006, HttpStatus.BAD_REQUEST, "Invoice items required"),
+
+    PAYMENT_AMOUNT_INVALID(108007, HttpStatus.BAD_REQUEST, "Invalid payment amount"),
+    PAYMENT_EXCEEDS_TOTAL(108008, HttpStatus.BAD_REQUEST, "Payment exceeds invoice remaining amount"),
+
     // ===================== SYSTEM (500xxx) =====================
     SYSTEM_ERROR(500001, HttpStatus.INTERNAL_SERVER_ERROR, "System error");
 
