@@ -1,0 +1,27 @@
+package com.project.base_v1.repository;
+
+import com.project.base_v1.entity.Prescription;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.Optional;
+import java.util.UUID;
+
+public interface
+PrescriptionRepository extends JpaRepository<Prescription, UUID>, JpaSpecificationExecutor<Prescription> {
+
+    @EntityGraph(attributePaths = {"medicalRecord", "patient", "doctor", "items", "items.medicine"})
+    @Query("SELECT p FROM Prescription p WHERE p.id = :id")
+    Optional<Prescription> findDetailById(@Param("id") UUID id);
+
+    @Query("""
+                SELECT p.prescriptionCode
+                FROM Prescription p
+                ORDER BY p.prescriptionCode DESC
+                LIMIT 1
+            """)
+    Optional<String> findLatestCode();
+}

@@ -62,6 +62,19 @@ public enum ErrorCode {
     PAYMENT_AMOUNT_INVALID(108007, HttpStatus.BAD_REQUEST, "Invalid payment amount"),
     PAYMENT_EXCEEDS_TOTAL(108008, HttpStatus.BAD_REQUEST, "Payment exceeds invoice remaining amount"),
 
+
+    // ===================== MEDICINE/INVENTORY (109xxx) =====================
+    MEDICINE_NOT_FOUND(109001, HttpStatus.NOT_FOUND, "Medicine not found"),
+    MEDICINE_INACTIVE(109002, HttpStatus.BAD_REQUEST, "Medicine is inactive"),
+    BATCH_NOT_FOUND(109003, HttpStatus.NOT_FOUND, "Medicine batch not found"),
+    INVALID_BATCH_QUANTITY(109004, HttpStatus.BAD_REQUEST, "Invalid batch quantity"),
+    STOCK_NOT_ENOUGH(109005, HttpStatus.BAD_REQUEST, "Stock not enough"),
+
+    PRESCRIPTION_NOT_FOUND(109006, HttpStatus.NOT_FOUND, "Prescription not found"),
+    PRESCRIPTION_ITEM_NOT_FOUND(109007, HttpStatus.NOT_FOUND, "Prescription item not found"),
+    PRESCRIPTION_INVALID_STATUS(109008, HttpStatus.BAD_REQUEST, "Invalid prescription status"),
+    PRESCRIPTION_LOCKED(109009, HttpStatus.BAD_REQUEST, "Prescription is locked"),
+
     // ===================== SYSTEM (500xxx) =====================
     SYSTEM_ERROR(500001, HttpStatus.INTERNAL_SERVER_ERROR, "System error");
 
