@@ -39,6 +39,16 @@ public enum ErrorCode {
     INVALID_STEP_PRICE(106006, HttpStatus.BAD_REQUEST, "Invalid step price"),
     SINGLE_SERVICE_SHOULD_NOT_HAVE_STEPS(106007, HttpStatus.BAD_REQUEST, "Single service should not contain package steps"),
 
+
+    // ===================== TREATMENT PLAN (107xxx) =====================
+    TREATMENT_PLAN_NOT_FOUND(107001, HttpStatus.NOT_FOUND, "Treatment plan not found"),
+    TREATMENT_ITEM_NOT_FOUND(107002, HttpStatus.NOT_FOUND, "Treatment item not found"),
+    INVALID_PLAN_STATUS(107003, HttpStatus.BAD_REQUEST, "Invalid treatment plan status transition"),
+    TREATMENT_PLAN_LOCKED(107004, HttpStatus.BAD_REQUEST, "Treatment plan is locked"),
+    SERVICE_INACTIVE(107005, HttpStatus.BAD_REQUEST, "Service is inactive"),
+    INVALID_QUANTITY(107006, HttpStatus.BAD_REQUEST, "Invalid quantity"),
+    INVALID_PRICE(107007, HttpStatus.BAD_REQUEST, "Invalid price"),
+
     // ===================== SYSTEM (500xxx) =====================
     SYSTEM_ERROR(500001, HttpStatus.INTERNAL_SERVER_ERROR, "System error");
 
