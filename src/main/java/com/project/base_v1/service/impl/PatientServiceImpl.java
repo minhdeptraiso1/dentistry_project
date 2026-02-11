@@ -35,6 +35,11 @@ public class PatientServiceImpl implements PatientService {
     @Transactional
     public PatientResponse create(CreatePatientRequest request) {
 
+        if (request.phone() != null && !request.phone().isBlank()
+                && patientRepository.existsByPhoneAndDeletedAtIsNull(request.phone().trim())) {
+            throw new BusinessException(ErrorCode.PATIENT_PHONE_DUPLICATED);
+        }
+
         Patient patient = Patient.builder()
                 .id(UUID.randomUUID())
                 .patientCode(patientCodeGenerator.nextCode())
@@ -48,6 +53,7 @@ public class PatientServiceImpl implements PatientService {
 
         return patientMapper.toResponse(patientRepository.save(patient));
     }
+
 
     @Override
     public PatientResponse getById(UUID id) {
@@ -77,7 +83,16 @@ public class PatientServiceImpl implements PatientService {
 
         if (request.fullName() != null) patient.setFullName(request.fullName());
         if (request.gender() != null) patient.setGender(request.gender());
-        if (request.phone() != null) patient.setPhone(request.phone());
+        if (request.phone() != null) {
+            String phone = request.phone().trim();
+            if (!phone.isBlank()
+                    && patientRepository.existsByPhoneAndDeletedAtIsNull(phone)
+                    && (patient.getPhone() == null || !phone.equals(patient.getPhone()))) {
+                throw new BusinessException(ErrorCode.PATIENT_PHONE_DUPLICATED);
+            }
+            patient.setPhone(phone);
+        }
+
         if (request.dob() != null) patient.setDob(request.dob());
         if (request.address() != null) patient.setAddress(request.address());
         if (request.note() != null) patient.setNote(request.note());

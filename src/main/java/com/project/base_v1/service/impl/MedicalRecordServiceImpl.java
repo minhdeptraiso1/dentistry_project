@@ -43,10 +43,10 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
     public MedicalRecordResponse create(CreateMedicalRecordRequest request) {
 
         Patient patient = patientRepository.findById(request.patientId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEDICAL_RECORD_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.PATIENT_NOT_FOUND));
 
         User doctor = userRepository.findById(request.doctorId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_REQUIRED));
 
         if (doctor.getRole() != UserRole.DOCTOR) {
             throw new BusinessException(ErrorCode.BAD_REQUEST);

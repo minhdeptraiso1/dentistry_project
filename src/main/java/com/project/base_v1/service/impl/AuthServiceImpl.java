@@ -96,24 +96,15 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse refresh(String refreshToken) {
 
-        TokenSession session =
-                tokenSessionRepository.findByRefreshToken(refreshToken)
-                        .orElseThrow(() ->
-                                new BusinessException(ErrorCode.TOKEN_EXPIRED)
-                        );
+        TokenSession session = tokenSessionRepository.findByRefreshToken(refreshToken)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TOKEN_INVALID));
 
-        if (session.isRevoked()) {
-            throw new BusinessException(ErrorCode.TOKEN_REVOKED);
-        }
-
-        if (session.getExpiredAt().isBefore(Instant.now())) {
-            throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
-        }
+        if (session.isRevoked()) throw new BusinessException(ErrorCode.TOKEN_REVOKED);
+        if (session.getExpiredAt().isBefore(Instant.now())) throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
 
         User user = userRepository.findById(session.getUserId())
-                .orElseThrow(() ->
-                        new BusinessException(ErrorCode.SYSTEM_ERROR)
-                );
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
 
         String newAccessToken =
                 jwtTokenProvider.generateAccessToken(

@@ -78,7 +78,7 @@ public class UserServiceImpl implements UserService {
     public UserResponse createUser(CreateUserRequest request) {
 
         if (userRepository.existsByUsername(request.username())) {
-            throw new BusinessException(ErrorCode.BAD_REQUEST);
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
         User user = User.builder()
