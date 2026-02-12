@@ -21,6 +21,8 @@ public record InvoiceResponse(
 
         UUID treatmentPlanId,
 
+        UUID prescriptionId,
+        
         InvoiceStatus status,
         String note,
 
