@@ -1,5 +1,6 @@
 package com.project.base_v1.controller;
 
+import com.project.base_v1.dto.request.invoice.CreateInvoiceFromPrescriptionRequest;
 import com.project.base_v1.dto.request.invoice.CreateInvoiceRequest;
 import com.project.base_v1.dto.request.invoice.IssueInvoiceRequest;
 import com.project.base_v1.dto.request.payment.AddPaymentRequest;
@@ -148,4 +149,26 @@ public class InvoiceController {
         invoiceService.cancel(id, note);
         return ApiResponseSever.ok(null);
     }
+
+    @Operation(
+            summary = "Create invoice from dispensed prescription",
+            description = """
+                        Create invoice items from prescription items (after DISPENSED).
+                        <br/>Pricing: unitPrice = importPrice * markupRate (default 1.2)
+                        <br/><b>Roles:</b> CASHIER, ADMIN
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Created"),
+            @ApiResponse(responseCode = "400", description = "Invalid status / request")
+    })
+    @PreAuthorize("hasAnyRole('CASHIER','ADMIN')")
+    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping("/from-prescription")
+    public ApiResponseSever<InvoiceResponse> createFromPrescription(
+            @Valid @RequestBody CreateInvoiceFromPrescriptionRequest request
+    ) {
+        return ApiResponseSever.ok(invoiceService.createFromPrescription(request));
+    }
+
 }

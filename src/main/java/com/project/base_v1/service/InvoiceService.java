@@ -1,5 +1,6 @@
 package com.project.base_v1.service;
 
+import com.project.base_v1.dto.request.invoice.CreateInvoiceFromPrescriptionRequest;
 import com.project.base_v1.dto.request.invoice.CreateInvoiceRequest;
 import com.project.base_v1.dto.request.invoice.IssueInvoiceRequest;
 import com.project.base_v1.dto.request.payment.AddPaymentRequest;
@@ -17,4 +18,7 @@ public interface InvoiceService {
     InvoiceResponse addPayment(UUID invoiceId, AddPaymentRequest request);
 
     void cancel(UUID invoiceId, String note);
+
+    InvoiceResponse createFromPrescription(CreateInvoiceFromPrescriptionRequest request);
+
 }
