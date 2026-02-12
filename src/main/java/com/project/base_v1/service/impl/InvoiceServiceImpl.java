@@ -1,5 +1,6 @@
 package com.project.base_v1.service.impl;
 
+import com.project.base_v1.dto.request.invoice.CreateInvoiceFromPrescriptionRequest;
 import com.project.base_v1.dto.request.invoice.CreateInvoiceItemRequest;
 import com.project.base_v1.dto.request.invoice.CreateInvoiceRequest;
 import com.project.base_v1.dto.request.invoice.IssueInvoiceRequest;
@@ -7,6 +8,7 @@ import com.project.base_v1.dto.request.payment.AddPaymentRequest;
 import com.project.base_v1.dto.response.invoice.InvoiceResponse;
 import com.project.base_v1.entity.Invoice;
 import com.project.base_v1.entity.InvoiceItem;
+import com.project.base_v1.entity.MedicineBatch;
 import com.project.base_v1.entity.Patient;
 import com.project.base_v1.entity.Payment;
 import com.project.base_v1.entity.ServiceCatalog;
@@ -14,13 +16,16 @@ import com.project.base_v1.entity.TreatmentItem;
 import com.project.base_v1.entity.TreatmentPlan;
 import com.project.base_v1.entity.User;
 import com.project.base_v1.enums.InvoiceStatus;
+import com.project.base_v1.enums.PrescriptionStatus;
 import com.project.base_v1.enums.TreatmentItemStatus;
 import com.project.base_v1.enums.UserRole;
 import com.project.base_v1.exception.BusinessException;
 import com.project.base_v1.exception.ErrorCode;
 import com.project.base_v1.mapper.InvoiceMapper;
 import com.project.base_v1.repository.InvoiceRepository;
+import com.project.base_v1.repository.MedicineBatchRepository;
 import com.project.base_v1.repository.PatientRepository;
+import com.project.base_v1.repository.PrescriptionRepository;
 import com.project.base_v1.repository.ServiceCatalogRepository;
 import com.project.base_v1.repository.TreatmentPlanRepository;
 import com.project.base_v1.repository.UserRepository;
@@ -46,6 +51,8 @@ public class InvoiceServiceImpl implements InvoiceService {
     private final TreatmentPlanRepository planRepo;
     private final ServiceCatalogRepository serviceRepo;
     private final UserRepository userRepo;
+    private final PrescriptionRepository rxRepo;
+    private final MedicineBatchRepository batchRepo;
 
     private final InvoiceCodeGenerator codeGen;
     private final InvoiceMapper mapper;
@@ -158,8 +165,95 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoice.setStatus(InvoiceStatus.ISSUED);
         invoice.setIssuedAt(Instant.now());
 
-        return mapper.toResponse(invoiceRepo.save(invoice));
+        Invoice saved = invoiceRepo.save(invoice);
+        return mapper.toResponse(invoiceRepo.findDetailById(saved.getId()).orElse(saved));
     }
+
+
+    @Override
+    @Transactional
+    public InvoiceResponse createFromPrescription(CreateInvoiceFromPrescriptionRequest request) {
+
+        var rx = rxRepo.findDetailById(request.prescriptionId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRESCRIPTION_NOT_FOUND));
+
+        if (rx.getStatus() != PrescriptionStatus.DISPENSED) {
+            throw new BusinessException(ErrorCode.PRESCRIPTION_INVALID_STATUS);
+        }
+
+        Patient patient = rx.getPatient();
+
+        User cashier = userRepo.findByUsername(CurrentUser.username())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        if (!(cashier.getRole() == UserRole.CASHIER || cashier.getRole() == UserRole.ADMIN)) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+
+        BigDecimal markup = (request.markupRate() == null || request.markupRate().signum() <= 0)
+                ? new BigDecimal("1.2")
+                : request.markupRate();
+
+        Invoice invoice = Invoice.builder()
+                .id(UUID.randomUUID())
+                .invoiceCode(codeGen.nextCode())
+                .patient(patient)
+                .cashier(cashier)
+                .prescription(rx)
+                .status(InvoiceStatus.DRAFT)
+                .note(request.note())
+                .subtotal(BigDecimal.ZERO)
+                .discountAmount(BigDecimal.ZERO)
+                .totalAmount(BigDecimal.ZERO)
+                .paidAmount(BigDecimal.ZERO)
+                .build();
+
+        List<InvoiceItem> items = new ArrayList<>();
+
+        for (var pi : rx.getItems()) {
+
+            // FIFO batch còn tồn để lấy importPrice
+            List<MedicineBatch> fifo = batchRepo.findAvailableBatchesFIFO(pi.getMedicine().getId());
+
+            BigDecimal importPrice = fifo.isEmpty()
+                    ? BigDecimal.ZERO
+                    : fifo.get(0).getImportPrice();
+
+            BigDecimal unitPrice = importPrice.multiply(markup);
+            int qty = (pi.getQuantity() == null || pi.getQuantity() <= 0) ? 1 : pi.getQuantity();
+
+            BigDecimal lineTotal = unitPrice.multiply(BigDecimal.valueOf(qty));
+
+            items.add(InvoiceItem.builder()
+                    .id(UUID.randomUUID())
+                    .invoice(invoice)
+                    .service(null)
+                    .itemName("Thuốc: " + pi.getMedicineName())
+                    .serviceCode(pi.getMedicineCode())
+                    .serviceType("MEDICINE")
+                    .quantity(qty)
+                    .unitPrice(unitPrice)
+                    .discountAmount(BigDecimal.ZERO)
+                    .lineTotal(lineTotal)
+                    .note(pi.getDosage())
+                    .build());
+        }
+
+        if (items.isEmpty()) {
+            throw new BusinessException(ErrorCode.INVOICE_ITEMS_REQUIRED);
+        }
+
+        invoice.getItems().addAll(items);
+
+        BigDecimal invoiceDiscount = request.discountAmount() != null ? request.discountAmount() : BigDecimal.ZERO;
+        if (invoiceDiscount.signum() < 0) throw new BusinessException(ErrorCode.BAD_REQUEST);
+
+        recalcAmounts(invoice, invoiceDiscount);
+
+        Invoice saved = invoiceRepo.save(invoice);
+        return mapper.toResponse(invoiceRepo.findDetailById(saved.getId()).orElse(saved));
+    }
+
 
     @Override
     @Transactional

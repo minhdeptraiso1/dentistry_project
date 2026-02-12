@@ -61,6 +61,8 @@ public enum ErrorCode {
 
     PAYMENT_AMOUNT_INVALID(108007, HttpStatus.BAD_REQUEST, "Invalid payment amount"),
     PAYMENT_EXCEEDS_TOTAL(108008, HttpStatus.BAD_REQUEST, "Payment exceeds invoice remaining amount"),
+    INVALID_MARKUP_RATE(108009, HttpStatus.BAD_REQUEST, "Invalid markup rate"),
+    PRESCRIPTION_NOT_DISPENSED(109010, HttpStatus.BAD_REQUEST, "Prescription must be dispensed before invoicing"),
 
 
     // ===================== MEDICINE/INVENTORY (109xxx) =====================

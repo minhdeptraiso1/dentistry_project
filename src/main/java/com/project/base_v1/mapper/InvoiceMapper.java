@@ -18,6 +18,7 @@ public interface InvoiceMapper {
     @Mapping(target = "cashierId", source = "cashier.id")
     @Mapping(target = "cashierUsername", source = "cashier.username")
     @Mapping(target = "treatmentPlanId", source = "treatmentPlan.id")
+    @Mapping(target = "prescriptionId", source = "prescription.id")
     InvoiceResponse toResponse(Invoice invoice);
 
     @Mapping(target = "serviceId", source = "service.id")

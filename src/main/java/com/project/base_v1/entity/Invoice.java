@@ -83,4 +83,9 @@ public class Invoice extends BaseAuditEntity {
 
     @OneToMany(mappedBy = "invoice", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     List<Payment> payments = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "prescription_id")
+    Prescription prescription;
+
 }
