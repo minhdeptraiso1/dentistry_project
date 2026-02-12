@@ -1,5 +1,6 @@
 package com.project.base_v1.dto.response.medicine;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 public record MedicineResponse(
@@ -9,6 +10,7 @@ public record MedicineResponse(
         String ingredient,
         String unit,
         String usageGuide,
-        boolean active
+        boolean active,
+        BigDecimal salePrice
 ) {
 }

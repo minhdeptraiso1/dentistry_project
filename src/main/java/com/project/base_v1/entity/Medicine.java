@@ -13,6 +13,7 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.Where;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
@@ -45,4 +46,8 @@ public class Medicine extends BaseAuditEntity {
 
     @Column(nullable = false)
     boolean active = true;
+
+    @Column(name = "sale_price")
+    BigDecimal salePrice;
+
 }
