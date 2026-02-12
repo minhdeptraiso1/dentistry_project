@@ -8,7 +8,6 @@ import com.project.base_v1.dto.request.payment.AddPaymentRequest;
 import com.project.base_v1.dto.response.invoice.InvoiceResponse;
 import com.project.base_v1.entity.Invoice;
 import com.project.base_v1.entity.InvoiceItem;
-import com.project.base_v1.entity.MedicineBatch;
 import com.project.base_v1.entity.Patient;
 import com.project.base_v1.entity.Payment;
 import com.project.base_v1.entity.ServiceCatalog;
@@ -190,9 +189,6 @@ public class InvoiceServiceImpl implements InvoiceService {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
 
-        BigDecimal markup = (request.markupRate() == null || request.markupRate().signum() <= 0)
-                ? new BigDecimal("1.2")
-                : request.markupRate();
 
         Invoice invoice = Invoice.builder()
                 .id(UUID.randomUUID())
@@ -212,14 +208,11 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         for (var pi : rx.getItems()) {
 
-            // FIFO batch còn tồn để lấy importPrice
-            List<MedicineBatch> fifo = batchRepo.findAvailableBatchesFIFO(pi.getMedicine().getId());
+            BigDecimal unitPrice = pi.getMedicine().getSalePrice();
+            if (unitPrice == null) {
+                throw new BusinessException(ErrorCode.MEDICINE_PRICE_NOT_SET);
+            }
 
-            BigDecimal importPrice = fifo.isEmpty()
-                    ? BigDecimal.ZERO
-                    : fifo.get(0).getImportPrice();
-
-            BigDecimal unitPrice = importPrice.multiply(markup);
             int qty = (pi.getQuantity() == null || pi.getQuantity() <= 0) ? 1 : pi.getQuantity();
 
             BigDecimal lineTotal = unitPrice.multiply(BigDecimal.valueOf(qty));

@@ -71,6 +71,9 @@ public enum ErrorCode {
     BATCH_NOT_FOUND(109003, HttpStatus.NOT_FOUND, "Medicine batch not found"),
     INVALID_BATCH_QUANTITY(109004, HttpStatus.BAD_REQUEST, "Invalid batch quantity"),
     STOCK_NOT_ENOUGH(109005, HttpStatus.BAD_REQUEST, "Stock not enough"),
+    MEDICINE_PRICE_NOT_SET(109011, HttpStatus.BAD_REQUEST, "Medicine sale price not set"),
+    MEDICINE_PRICE_INVALID(109012, HttpStatus.BAD_REQUEST, "Invalid medicine price"),
+
 
     PRESCRIPTION_NOT_FOUND(109006, HttpStatus.NOT_FOUND, "Prescription not found"),
     PRESCRIPTION_ITEM_NOT_FOUND(109007, HttpStatus.NOT_FOUND, "Prescription item not found"),
