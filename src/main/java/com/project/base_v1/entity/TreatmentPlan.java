@@ -71,6 +71,11 @@ public class TreatmentPlan extends BaseAuditEntity {
     @Column(name = "final_amount", nullable = false)
     BigDecimal finalAmount;
 
-    @OneToMany(mappedBy = "plan", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "plan",
+            fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    @Builder.Default
     List<TreatmentItem> items = new ArrayList<>();
+
 }

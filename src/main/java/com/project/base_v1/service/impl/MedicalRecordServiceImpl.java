@@ -48,9 +48,10 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
         User doctor = userRepository.findById(request.doctorId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_REQUIRED));
 
-        if (doctor.getRole() != UserRole.DOCTOR) {
-            throw new BusinessException(ErrorCode.BAD_REQUEST);
-        }
+        if (doctor.getRole() != UserRole.DOCTOR && doctor.getRole() != UserRole.ADMIN) {
+    throw new BusinessException(ErrorCode.BAD_REQUEST);
+}
+
 
         Instant visitDate = request.visitDate() != null ? request.visitDate() : Instant.now();
 

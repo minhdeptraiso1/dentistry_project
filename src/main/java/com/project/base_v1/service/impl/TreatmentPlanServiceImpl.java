@@ -1,5 +1,16 @@
 package com.project.base_v1.service.impl;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.project.base_v1.dto.request.treatment.CreateTreatmentItemRequest;
 import com.project.base_v1.dto.request.treatment.CreateTreatmentPlanRequest;
 import com.project.base_v1.dto.request.treatment.UpdateTreatmentPlanRequest;
@@ -22,17 +33,8 @@ import com.project.base_v1.repository.UserRepository;
 import com.project.base_v1.security.CurrentUser;
 import com.project.base_v1.service.TreatmentPlanService;
 import com.project.base_v1.service.helper.TreatmentPlanCodeGenerator;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -54,9 +56,11 @@ public class TreatmentPlanServiceImpl implements TreatmentPlanService {
 
         // doctor lấy từ medical record cho đúng nghiệp vụ
         User doctor = mr.getDoctor();
-        if (doctor.getRole() != UserRole.DOCTOR) {
-            throw new BusinessException(ErrorCode.DOCTOR_REQUIRED);
-        }
+
+if (doctor == null || (doctor.getRole() != UserRole.DOCTOR && doctor.getRole() != UserRole.ADMIN)) {
+    throw new BusinessException(ErrorCode.DOCTOR_REQUIRED);
+}
+
 
         TreatmentPlan plan = TreatmentPlan.builder()
                 .id(UUID.randomUUID())

@@ -1,6 +1,9 @@
 package com.project.base_v1.repository;
 
 import com.project.base_v1.entity.TreatmentPlan;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -23,4 +26,9 @@ public interface TreatmentPlanRepository extends JpaRepository<TreatmentPlan, UU
                 LIMIT 1
             """)
     Optional<String> findLatestPlanCode();
+
+    @Override
+    @EntityGraph(attributePaths = {"patient", "doctor", "items", "items.service"})
+    Page<TreatmentPlan> findAll(Specification<TreatmentPlan> spec, Pageable pageable);
+
 }
