@@ -16,6 +16,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -115,8 +116,8 @@ public class ServiceCatalogController {
     @PreAuthorize("hasAnyRole('ADMIN','CASHIER','DOCTOR')")
     @GetMapping
     public ApiResponseSever<Page<ServiceResponse>> search(
-            ServiceSearchRequest request,
-            @Parameter(hidden = true) Pageable pageable
+            @ParameterObject ServiceSearchRequest request,
+            @ParameterObject Pageable pageable
     ) {
         return ApiResponseSever.ok(serviceCatalogService.search(request, pageable));
     }

@@ -16,6 +16,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -107,8 +108,8 @@ public class MedicalRecordController {
     @PreAuthorize("hasAnyRole('ADMIN','DOCTOR','CASHIER')")
     @GetMapping
     public ApiResponseSever<Page<MedicalRecordResponse>> search(
-            MedicalRecordSearchRequest request,
-            @Parameter(hidden = true) Pageable pageable
+            @ParameterObject MedicalRecordSearchRequest request,
+            @ParameterObject Pageable pageable
     ) {
         return ApiResponseSever.ok(medicalRecordService.search(request, pageable));
     }

@@ -1,6 +1,9 @@
 package com.project.base_v1.repository;
 
 import com.project.base_v1.entity.ServiceCatalog;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -25,4 +28,8 @@ public interface ServiceCatalogRepository extends JpaRepository<ServiceCatalog, 
                 LIMIT 1
             """)
     Optional<String> findLatestCode();
+
+    @Override
+    @EntityGraph(attributePaths = {"steps"})
+    Page<ServiceCatalog> findAll(Specification<ServiceCatalog> spec, Pageable pageable);
 }
