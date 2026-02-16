@@ -2,9 +2,13 @@ package com.project.base_v1.service;
 
 import com.project.base_v1.dto.request.invoice.CreateInvoiceFromPrescriptionRequest;
 import com.project.base_v1.dto.request.invoice.CreateInvoiceRequest;
+import com.project.base_v1.dto.request.invoice.InvoiceSearchRequest;
 import com.project.base_v1.dto.request.invoice.IssueInvoiceRequest;
 import com.project.base_v1.dto.request.payment.AddPaymentRequest;
 import com.project.base_v1.dto.response.invoice.InvoiceResponse;
+import com.project.base_v1.dto.response.invoice.InvoiceSummaryResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
 
@@ -20,5 +24,7 @@ public interface InvoiceService {
     void cancel(UUID invoiceId, String note);
 
     InvoiceResponse createFromPrescription(CreateInvoiceFromPrescriptionRequest request);
+
+    Page<InvoiceSummaryResponse> search(InvoiceSearchRequest request, Pageable pageable);
 
 }

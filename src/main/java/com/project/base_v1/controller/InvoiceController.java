@@ -2,10 +2,12 @@ package com.project.base_v1.controller;
 
 import com.project.base_v1.dto.request.invoice.CreateInvoiceFromPrescriptionRequest;
 import com.project.base_v1.dto.request.invoice.CreateInvoiceRequest;
+import com.project.base_v1.dto.request.invoice.InvoiceSearchRequest;
 import com.project.base_v1.dto.request.invoice.IssueInvoiceRequest;
 import com.project.base_v1.dto.request.payment.AddPaymentRequest;
 import com.project.base_v1.dto.response.core.ApiResponseSever;
 import com.project.base_v1.dto.response.invoice.InvoiceResponse;
+import com.project.base_v1.dto.response.invoice.InvoiceSummaryResponse;
 import com.project.base_v1.service.InvoiceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -16,6 +18,9 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -170,5 +175,18 @@ public class InvoiceController {
     ) {
         return ApiResponseSever.ok(invoiceService.createFromPrescription(request));
     }
+
+
+    @Operation(summary = "Search invoices", description = "Filter by patientId, status, fromDate, toDate")
+    @ApiResponses({@ApiResponse(responseCode = "200", description = "Success")})
+    @PreAuthorize("hasAnyRole('CASHIER','ADMIN','DOCTOR')")
+    @GetMapping
+    public ApiResponseSever<Page<InvoiceSummaryResponse>> search(
+            @ParameterObject InvoiceSearchRequest request,
+            @ParameterObject Pageable pageable
+    ) {
+        return ApiResponseSever.ok(invoiceService.search(request, pageable));
+    }
+
 
 }

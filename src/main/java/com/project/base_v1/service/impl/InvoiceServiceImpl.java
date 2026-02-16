@@ -3,9 +3,11 @@ package com.project.base_v1.service.impl;
 import com.project.base_v1.dto.request.invoice.CreateInvoiceFromPrescriptionRequest;
 import com.project.base_v1.dto.request.invoice.CreateInvoiceItemRequest;
 import com.project.base_v1.dto.request.invoice.CreateInvoiceRequest;
+import com.project.base_v1.dto.request.invoice.InvoiceSearchRequest;
 import com.project.base_v1.dto.request.invoice.IssueInvoiceRequest;
 import com.project.base_v1.dto.request.payment.AddPaymentRequest;
 import com.project.base_v1.dto.response.invoice.InvoiceResponse;
+import com.project.base_v1.dto.response.invoice.InvoiceSummaryResponse;
 import com.project.base_v1.entity.Invoice;
 import com.project.base_v1.entity.InvoiceItem;
 import com.project.base_v1.entity.Patient;
@@ -24,14 +26,19 @@ import com.project.base_v1.mapper.InvoiceMapper;
 import com.project.base_v1.repository.InvoiceRepository;
 import com.project.base_v1.repository.MedicineBatchRepository;
 import com.project.base_v1.repository.PatientRepository;
+import com.project.base_v1.repository.PaymentRepository;
 import com.project.base_v1.repository.PrescriptionRepository;
 import com.project.base_v1.repository.ServiceCatalogRepository;
 import com.project.base_v1.repository.TreatmentPlanRepository;
 import com.project.base_v1.repository.UserRepository;
+import com.project.base_v1.repository.spec.InvoiceSpecification;
 import com.project.base_v1.security.CurrentUser;
 import com.project.base_v1.service.InvoiceService;
 import com.project.base_v1.service.helper.InvoiceCodeGenerator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,6 +62,8 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     private final InvoiceCodeGenerator codeGen;
     private final InvoiceMapper mapper;
+
+    private final PaymentRepository paymentRepo;
 
     @Override
     @Transactional
@@ -133,15 +142,29 @@ public class InvoiceServiceImpl implements InvoiceService {
         recalcAmounts(invoice, invoiceDiscount);
 
         Invoice saved = invoiceRepo.save(invoice);
-        return mapper.toResponse(invoiceRepo.findDetailById(saved.getId()).orElse(saved));
+
+        Invoice detail = invoiceRepo.findDetailById(saved.getId()).orElse(saved);
+
+        detail.getPayments().clear();
+        detail.getPayments().addAll(paymentRepo.findByInvoiceId(detail.getId()));
+
+        return mapper.toResponse(detail);
+
+
     }
 
     @Override
+    @Transactional(readOnly = true)
     public InvoiceResponse getById(UUID id) {
+
         Invoice invoice = invoiceRepo.findDetailById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVOICE_NOT_FOUND));
+        invoice.getPayments().clear();
+        invoice.getPayments().addAll(paymentRepo.findByInvoiceId(invoice.getId()));
+
         return mapper.toResponse(invoice);
     }
+
 
     @Override
     @Transactional
@@ -347,6 +370,21 @@ public class InvoiceServiceImpl implements InvoiceService {
         }
         return items;
     }
+
+    @Override
+    public Page<InvoiceSummaryResponse> search(InvoiceSearchRequest request, Pageable pageable) {
+
+        Specification<Invoice> spec = Specification.allOf(
+                InvoiceSpecification.hasPatientId(request.patientId()),
+                InvoiceSpecification.hasStatus(request.status()),
+                InvoiceSpecification.createdFrom(request.fromDate()),
+                InvoiceSpecification.createdTo(request.toDate())
+        );
+
+        return invoiceRepo.findAll(spec, pageable)
+                .map(mapper::toSummary);
+    }
+
 
     private void recalcAmounts(Invoice invoice, BigDecimal invoiceDiscount) {
         BigDecimal subtotal = invoice.getItems().stream()

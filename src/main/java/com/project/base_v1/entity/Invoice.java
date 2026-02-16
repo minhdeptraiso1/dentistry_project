@@ -78,9 +78,11 @@ public class Invoice extends BaseAuditEntity {
     Instant issuedAt;
     Instant paidAt;
 
+    @Builder.Default
     @OneToMany(mappedBy = "invoice", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     List<InvoiceItem> items = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "invoice", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     List<Payment> payments = new ArrayList<>();
 
