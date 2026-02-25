@@ -2,6 +2,7 @@ package com.project.base_v1.service.impl;
 
 import com.project.base_v1.dto.request.medicine.CreateMedicineRequest;
 import com.project.base_v1.dto.request.medicine.ImportBatchRequest;
+import com.project.base_v1.dto.request.medicine.MedicineSearchRequest;
 import com.project.base_v1.dto.request.medicine.SetMedicinePriceRequest;
 import com.project.base_v1.dto.response.medicine.MedicineBatchResponse;
 import com.project.base_v1.dto.response.medicine.MedicinePriceHistoryResponse;
@@ -16,18 +17,23 @@ import com.project.base_v1.mapper.MedicinePriceHistoryMapper;
 import com.project.base_v1.repository.MedicineBatchRepository;
 import com.project.base_v1.repository.MedicinePriceHistoryRepository;
 import com.project.base_v1.repository.MedicineRepository;
+import com.project.base_v1.repository.spec.MedicineSpecification;
 import com.project.base_v1.security.CurrentUser;
 import com.project.base_v1.service.MedicineService;
 import com.project.base_v1.service.helper.MedicineCodeGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -57,10 +63,19 @@ public class MedicineServiceImpl implements MedicineService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public MedicineResponse getById(UUID id) {
         Medicine m = medicineRepo.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEDICINE_NOT_FOUND));
-        return medicineMapper.toResponse(m);
+
+        Integer stock = batchRepo.sumRemainingByMedicineId(id);
+        MedicineResponse base = medicineMapper.toResponse(m);
+
+        return new MedicineResponse(
+                base.id(), base.code(), base.name(), base.ingredient(),
+                base.unit(), base.usageGuide(), base.active(), base.salePrice(),
+                stock
+        );
     }
 
 
@@ -99,15 +114,16 @@ public class MedicineServiceImpl implements MedicineService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<MedicinePriceHistoryResponse> priceHistory(UUID medicineId, Pageable pageable) {
-        // validate medicine exists (optional)
         if (!medicineRepo.existsById(medicineId)) {
             throw new BusinessException(ErrorCode.MEDICINE_NOT_FOUND);
         }
         return historyRepo.findByMedicine_IdOrderByChangedAtDesc(medicineId, pageable)
                 .map(historyMapper::toResponse);
     }
-    
+
+
     @Override
     @Transactional
     public MedicineBatchResponse importBatch(ImportBatchRequest request) {
@@ -144,5 +160,35 @@ public class MedicineServiceImpl implements MedicineService {
                 saved.getQuantityIn(),
                 saved.getQuantityRemaining()
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<MedicineResponse> search(MedicineSearchRequest request, Pageable pageable) {
+        Specification<Medicine> spec = Specification.allOf(
+                MedicineSpecification.keywordLike(request.keyword()),
+                MedicineSpecification.hasActive(request.active())
+        );
+
+        Page<Medicine> page = medicineRepo.findAll(spec, pageable);
+
+        // batch sum 1 lần cho cả page (tránh N+1)
+        List<UUID> ids = page.getContent().stream().map(Medicine::getId).toList();
+        Map<UUID, Integer> stockMap = batchRepo.sumRemainingByMedicineIds(ids).stream()
+                .collect(Collectors.toMap(
+                        row -> (UUID) row[0],
+                        row -> ((Number) row[1]).intValue()
+                ));
+
+        return page.map(m -> {
+            MedicineResponse base = medicineMapper.toResponse(m);
+            Integer stock = stockMap.getOrDefault(m.getId(), 0);
+
+            return new MedicineResponse(
+                    base.id(), base.code(), base.name(), base.ingredient(),
+                    base.unit(), base.usageGuide(), base.active(), base.salePrice(),
+                    stock
+            );
+        });
     }
 }

@@ -33,4 +33,20 @@ public interface MedicineBatchRepository extends JpaRepository<MedicineBatch, UU
             """)
     List<MedicineBatch> findBatchesExpiredOrNear(LocalDate today, LocalDate nearDate);
 
+
+    @Query("""
+                SELECT COALESCE(SUM(b.quantityRemaining), 0)
+                FROM MedicineBatch b
+                WHERE b.medicine.id = :medicineId
+            """)
+    Integer sumRemainingByMedicineId(@Param("medicineId") UUID medicineId);
+
+    @Query("""
+                SELECT b.medicine.id, COALESCE(SUM(b.quantityRemaining), 0)
+                FROM MedicineBatch b
+                WHERE b.medicine.id IN :ids
+                GROUP BY b.medicine.id
+            """)
+    List<Object[]> sumRemainingByMedicineIds(@Param("ids") List<UUID> ids);
 }
+
