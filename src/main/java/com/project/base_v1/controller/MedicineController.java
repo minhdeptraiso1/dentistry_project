@@ -18,6 +18,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -101,6 +102,19 @@ public class MedicineController {
             @Parameter(hidden = true) Pageable pageable
     ) {
         return ApiResponseSever.ok(medicineService.priceHistory(id, pageable));
+    }
+
+    @Operation(summary = "Search medicines", description = """
+            Search medicines by keyword (code/name/ingredient) and active.
+            <br/><b>Roles:</b> ADMIN, CASHIER, DOCTOR
+            """)
+    @PreAuthorize("hasAnyRole('ADMIN','CASHIER','DOCTOR')")
+    @GetMapping
+    public ApiResponseSever<Page<MedicineResponse>> search(
+            @ParameterObject com.project.base_v1.dto.request.medicine.MedicineSearchRequest request,
+            @ParameterObject Pageable pageable
+    ) {
+        return ApiResponseSever.ok(medicineService.search(request, pageable));
     }
 
 }

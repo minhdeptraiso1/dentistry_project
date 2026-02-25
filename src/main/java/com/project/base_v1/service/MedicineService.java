@@ -2,6 +2,7 @@ package com.project.base_v1.service;
 
 import com.project.base_v1.dto.request.medicine.CreateMedicineRequest;
 import com.project.base_v1.dto.request.medicine.ImportBatchRequest;
+import com.project.base_v1.dto.request.medicine.MedicineSearchRequest;
 import com.project.base_v1.dto.request.medicine.SetMedicinePriceRequest;
 import com.project.base_v1.dto.response.medicine.MedicineBatchResponse;
 import com.project.base_v1.dto.response.medicine.MedicinePriceHistoryResponse;
@@ -22,5 +23,5 @@ public interface MedicineService {
 
     Page<MedicinePriceHistoryResponse> priceHistory(UUID medicineId, Pageable pageable);
 
-
+    Page<MedicineResponse> search(MedicineSearchRequest request, Pageable pageable);
 }

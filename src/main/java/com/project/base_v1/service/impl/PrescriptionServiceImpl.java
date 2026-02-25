@@ -3,8 +3,10 @@ package com.project.base_v1.service.impl;
 import com.project.base_v1.dto.request.prescription.CreatePrescriptionItemRequest;
 import com.project.base_v1.dto.request.prescription.CreatePrescriptionRequest;
 import com.project.base_v1.dto.request.prescription.DispenseRequest;
+import com.project.base_v1.dto.request.prescription.PrescriptionSearchRequest;
 import com.project.base_v1.dto.request.prescription.UpdatePrescriptionRequest;
 import com.project.base_v1.dto.response.prescription.PrescriptionResponse;
+import com.project.base_v1.dto.response.prescription.PrescriptionSummaryResponse;
 import com.project.base_v1.entity.DispenseLog;
 import com.project.base_v1.entity.MedicalRecord;
 import com.project.base_v1.entity.Medicine;
@@ -20,10 +22,14 @@ import com.project.base_v1.repository.MedicalRecordRepository;
 import com.project.base_v1.repository.MedicineBatchRepository;
 import com.project.base_v1.repository.MedicineRepository;
 import com.project.base_v1.repository.PrescriptionRepository;
+import com.project.base_v1.repository.spec.PrescriptionSpecification;
 import com.project.base_v1.security.CurrentUser;
 import com.project.base_v1.service.PrescriptionService;
 import com.project.base_v1.service.helper.PrescriptionCodeGenerator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -201,4 +207,22 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
         return items;
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PrescriptionSummaryResponse> search(PrescriptionSearchRequest request, Pageable pageable) {
+
+        Specification<Prescription> spec = Specification.allOf(
+                PrescriptionSpecification.keywordLike(request.keyword()),
+                PrescriptionSpecification.hasPatientId(request.patientId()),
+                PrescriptionSpecification.hasDoctorId(request.doctorId()),
+                PrescriptionSpecification.hasStatus(request.status()),
+                PrescriptionSpecification.createdFrom(request.fromDate()),
+                PrescriptionSpecification.createdTo(request.toDate())
+        );
+
+        return rxRepo.findAll(spec, pageable)
+                .map(mapper::toSummary);
+    }
+
 }

@@ -2,9 +2,11 @@ package com.project.base_v1.controller;
 
 import com.project.base_v1.dto.request.prescription.CreatePrescriptionRequest;
 import com.project.base_v1.dto.request.prescription.DispenseRequest;
+import com.project.base_v1.dto.request.prescription.PrescriptionSearchRequest;
 import com.project.base_v1.dto.request.prescription.UpdatePrescriptionRequest;
 import com.project.base_v1.dto.response.core.ApiResponseSever;
 import com.project.base_v1.dto.response.prescription.PrescriptionResponse;
+import com.project.base_v1.dto.response.prescription.PrescriptionSummaryResponse;
 import com.project.base_v1.service.PrescriptionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -15,6 +17,9 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -90,5 +95,18 @@ public class PrescriptionController {
     ) {
         prescriptionService.cancel(id, note);
         return ApiResponseSever.ok(null);
+    }
+
+    @Operation(summary = "Search prescriptions", description = """
+            Filter by keyword, patientId, doctorId, status, fromDate, toDate.
+            <br/><b>Roles:</b> ADMIN, DOCTOR, CASHIER
+            """)
+    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR','CASHIER')")
+    @GetMapping
+    public ApiResponseSever<Page<PrescriptionSummaryResponse>> search(
+            @ParameterObject PrescriptionSearchRequest request,
+            @ParameterObject Pageable pageable
+    ) {
+        return ApiResponseSever.ok(prescriptionService.search(request, pageable));
     }
 }

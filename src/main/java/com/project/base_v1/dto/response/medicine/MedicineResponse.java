@@ -11,6 +11,7 @@ public record MedicineResponse(
         String unit,
         String usageGuide,
         boolean active,
-        BigDecimal salePrice
+        BigDecimal salePrice,
+        Integer stockRemaining
 ) {
 }

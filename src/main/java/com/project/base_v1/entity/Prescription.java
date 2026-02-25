@@ -62,5 +62,6 @@ public class Prescription extends BaseAuditEntity {
     String note;
 
     @OneToMany(mappedBy = "prescription", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     List<PrescriptionItem> items = new ArrayList<>();
 }

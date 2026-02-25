@@ -1,6 +1,9 @@
 package com.project.base_v1.repository;
 
 import com.project.base_v1.entity.Prescription;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -24,4 +27,8 @@ PrescriptionRepository extends JpaRepository<Prescription, UUID>, JpaSpecificati
                 LIMIT 1
             """)
     Optional<String> findLatestCode();
+
+    @Override
+    @EntityGraph(attributePaths = {"medicalRecord", "patient", "doctor"})
+    Page<Prescription> findAll(Specification<Prescription> spec, Pageable pageable);
 }
