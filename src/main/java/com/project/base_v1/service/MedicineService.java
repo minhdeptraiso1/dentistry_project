@@ -24,4 +24,8 @@ public interface MedicineService {
     Page<MedicinePriceHistoryResponse> priceHistory(UUID medicineId, Pageable pageable);
 
     Page<MedicineResponse> search(MedicineSearchRequest request, Pageable pageable);
+
+    Page<MedicineBatchResponse> batchHistory(UUID medicineId, Pageable pageable);
+
+    void disposeBatch(UUID batchId, String reason);
 }

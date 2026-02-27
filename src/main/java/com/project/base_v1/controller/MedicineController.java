@@ -2,6 +2,7 @@ package com.project.base_v1.controller;
 
 import com.project.base_v1.dto.request.medicine.CreateMedicineRequest;
 import com.project.base_v1.dto.request.medicine.ImportBatchRequest;
+import com.project.base_v1.dto.request.medicine.MedicineSearchRequest;
 import com.project.base_v1.dto.request.medicine.SetMedicinePriceRequest;
 import com.project.base_v1.dto.response.core.ApiResponseSever;
 import com.project.base_v1.dto.response.medicine.MedicineBatchResponse;
@@ -29,6 +30,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -111,10 +113,29 @@ public class MedicineController {
     @PreAuthorize("hasAnyRole('ADMIN','CASHIER','DOCTOR')")
     @GetMapping
     public ApiResponseSever<Page<MedicineResponse>> search(
-            @ParameterObject com.project.base_v1.dto.request.medicine.MedicineSearchRequest request,
+            @ParameterObject MedicineSearchRequest request,
             @ParameterObject Pageable pageable
     ) {
         return ApiResponseSever.ok(medicineService.search(request, pageable));
     }
 
+    @Operation(summary = "Batch history by medicine", description = "<b>Roles:</b> ADMIN, CASHIER")
+    @PreAuthorize("hasAnyRole('ADMIN','CASHIER')")
+    @GetMapping("/{id}/batches")
+    public ApiResponseSever<Page<MedicineBatchResponse>> batchHistory(
+            @PathVariable UUID id,
+            @ParameterObject Pageable pageable
+    ) {
+        return ApiResponseSever.ok(medicineService.batchHistory(id, pageable));
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','CASHIER')")
+    @PostMapping("/batches/{batchId}/dispose")
+    public ApiResponseSever<Void> disposeBatch(
+            @PathVariable UUID batchId,
+            @RequestParam(required = false) String reason
+    ) {
+        medicineService.disposeBatch(batchId, reason);
+        return ApiResponseSever.ok(null);
+    }
 }
