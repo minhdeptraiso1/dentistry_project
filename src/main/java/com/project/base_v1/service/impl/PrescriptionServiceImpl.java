@@ -34,6 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -120,27 +121,28 @@ public class PrescriptionServiceImpl implements PrescriptionService {
             throw new BusinessException(ErrorCode.PRESCRIPTION_INVALID_STATUS);
         }
 
-        // chốt status
         rx.setStatus(PrescriptionStatus.ISSUED);
 
-        // FIFO deduct for each item
         for (PrescriptionItem item : rx.getItems()) {
             int need = item.getQuantity();
-            if (need <= 0) continue;
+            if (need <= 0)
+                continue;
 
-            List<MedicineBatch> batches = batchRepo.findAvailableBatchesFIFO(item.getMedicine().getId());
+            List<MedicineBatch> batches = batchRepo.findAvailableBatchesFIFO(item.getMedicine().getId(), LocalDate.now());
 
             int remainNeed = need;
             for (MedicineBatch b : batches) {
-                if (remainNeed == 0) break;
+                if (remainNeed == 0)
+                    break;
 
                 int canTake = Math.min(b.getQuantityRemaining(), remainNeed);
-                if (canTake <= 0) continue;
+                if (canTake <= 0)
+                    continue;
 
                 b.setQuantityRemaining(b.getQuantityRemaining() - canTake);
                 remainNeed -= canTake;
 
-                // log trace
+
                 DispenseLog log = DispenseLog.builder()
                         .id(UUID.randomUUID())
                         .prescription(rx)
@@ -154,9 +156,15 @@ public class PrescriptionServiceImpl implements PrescriptionService {
             }
 
             if (remainNeed > 0) {
-                // rollback transaction -> throw
                 throw new BusinessException(ErrorCode.STOCK_NOT_ENOUGH);
             }
+            Integer stock = batchRepo.sumRemainingByMedicineId(item.getMedicine().getId());
+            if (stock != null && stock == 0) {
+                Medicine med = item.getMedicine();
+                med.setActive(false);
+                medRepo.save(med);
+            }
+
         }
 
         rx.setStatus(PrescriptionStatus.DISPENSED);

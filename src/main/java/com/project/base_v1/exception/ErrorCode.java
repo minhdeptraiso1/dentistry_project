@@ -73,6 +73,8 @@ public enum ErrorCode {
     STOCK_NOT_ENOUGH(109005, HttpStatus.BAD_REQUEST, "Stock not enough"),
     MEDICINE_PRICE_NOT_SET(109011, HttpStatus.BAD_REQUEST, "Medicine sale price not set"),
     MEDICINE_PRICE_INVALID(109012, HttpStatus.BAD_REQUEST, "Invalid medicine price"),
+    BATCH_EXPIRED(109006, HttpStatus.BAD_REQUEST, "Batch expired"),
+    BATCH_ALREADY_EMPTY(109007, HttpStatus.BAD_REQUEST, "Batch already empty"),
 
 
     PRESCRIPTION_NOT_FOUND(109006, HttpStatus.NOT_FOUND, "Prescription not found"),
@@ -80,6 +82,8 @@ public enum ErrorCode {
     PRESCRIPTION_INVALID_STATUS(109008, HttpStatus.BAD_REQUEST, "Invalid prescription status"),
     PRESCRIPTION_LOCKED(109009, HttpStatus.BAD_REQUEST, "Prescription is locked"),
 
+    EXPENSE_NOT_FOUND(110001, HttpStatus.NOT_FOUND, "Expense not found"),
+    EXPENSE_INVALID_AMOUNT(110002, HttpStatus.BAD_REQUEST, "Invalid expense amount"),
     // ===================== SYSTEM (500xxx) =====================
     SYSTEM_ERROR(500001, HttpStatus.INTERNAL_SERVER_ERROR, "System error");
 
