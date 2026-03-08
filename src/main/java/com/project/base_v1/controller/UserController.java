@@ -1,14 +1,15 @@
 package com.project.base_v1.controller;
 
+import com.project.base_v1.dto.request.user.ChangePasswordRequest;
 import com.project.base_v1.dto.request.user.CreateUserRequest;
 import com.project.base_v1.dto.request.user.UpdateUserRequest;
 import com.project.base_v1.dto.request.user.UserSearchRequest;
 import com.project.base_v1.dto.response.core.ApiResponseSever;
+import com.project.base_v1.dto.response.user.UserDetailResponse;
 import com.project.base_v1.dto.response.user.UserResponse;
 import com.project.base_v1.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -17,6 +18,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -77,19 +79,10 @@ public class UserController {
     public ApiResponseSever<Page<UserResponse>> search(
             @Parameter(
                     description = "Search by username or email",
-                    examples = @ExampleObject(
-                            value = """
-                                    {
-                                      "keyword": "admin",
-                                      "role": "ADMIN",
-                                      "status": "ACTIVE"
-                                    }
-                                    """
-                    )
+                    example = "john"
             )
-            UserSearchRequest request,
-            @Parameter(hidden = true)
-            Pageable pageable
+            @ParameterObject UserSearchRequest request,
+            @ParameterObject Pageable pageable
     ) {
         return ApiResponseSever.ok(userService.searchUsers(request, pageable));
     }
@@ -164,6 +157,25 @@ public class UserController {
             @PathVariable UUID id
     ) {
         userService.deleteUserById(id);
+        return ApiResponseSever.ok(null);
+    }
+
+    @GetMapping("/{id}")
+    public ApiResponseSever<UserDetailResponse> getById(
+            @Parameter(
+                    description = "User ID",
+                    example = "550e8400-e29b-41d4-a716-446655440000"
+            )
+            @PathVariable UUID id) {
+        return ApiResponseSever.ok(userService.getUserById(id));
+    }
+
+    @PutMapping("/{id}/password")
+    public ApiResponseSever<Void> changePassword(
+            @PathVariable UUID id,
+            @RequestBody @Valid ChangePasswordRequest request
+    ) {
+        userService.changePassword(id, request);
         return ApiResponseSever.ok(null);
     }
 }
