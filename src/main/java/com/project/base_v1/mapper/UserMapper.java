@@ -1,19 +1,15 @@
 package com.project.base_v1.mapper;
 
+import com.project.base_v1.dto.response.user.UserDetailResponse;
 import com.project.base_v1.dto.response.user.UserResponse;
 import com.project.base_v1.entity.User;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
 
-@Component
-public class UserMapper {
+@Mapper(componentModel = "spring")
+public interface UserMapper {
 
-    public UserResponse toResponse(User user) {
-        return new UserResponse(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.isEnabled(),
-                user.getRole()
-        );
-    }
+    UserResponse toResponse(User user);
+
+    UserDetailResponse toDetail(User user);
+
 }

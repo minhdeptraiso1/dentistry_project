@@ -21,6 +21,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(103001, HttpStatus.NOT_FOUND, "User not found"),
     USERNAME_ALREADY_EXISTS(103002, HttpStatus.BAD_REQUEST, "Username already exists"),
     EMAIL_ALREADY_EXISTS(103003, HttpStatus.BAD_REQUEST, "Email already exists"),
+    INVALID_PASSWORD(103004, HttpStatus.BAD_REQUEST, "Invalid password"),
 
     // ===================== PATIENT (104xxx) =====================
     PATIENT_NOT_FOUND(104001, HttpStatus.NOT_FOUND, "Patient not found"),

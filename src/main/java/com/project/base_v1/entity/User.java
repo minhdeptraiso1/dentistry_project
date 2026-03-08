@@ -33,6 +33,12 @@ public class User extends BaseAuditEntity {
     @Id
     UUID id;
 
+    @Column(nullable = false)
+    String name;
+
+    @Column(nullable = true)
+    String img;
+
     @Column(nullable = false, unique = true)
     String username;
 

@@ -1,8 +1,10 @@
 package com.project.base_v1.service.impl;
 
+import com.project.base_v1.dto.request.user.ChangePasswordRequest;
 import com.project.base_v1.dto.request.user.CreateUserRequest;
 import com.project.base_v1.dto.request.user.UpdateUserRequest;
 import com.project.base_v1.dto.request.user.UserSearchRequest;
+import com.project.base_v1.dto.response.user.UserDetailResponse;
 import com.project.base_v1.dto.response.user.UserResponse;
 import com.project.base_v1.entity.User;
 import com.project.base_v1.exception.BusinessException;
@@ -78,11 +80,13 @@ public class UserServiceImpl implements UserService {
     public UserResponse createUser(CreateUserRequest request) {
 
         if (userRepository.existsByUsername(request.username())) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+            throw new BusinessException(ErrorCode.USERNAME_ALREADY_EXISTS);
         }
 
         User user = User.builder()
                 .id(UUID.randomUUID())
+                .name(request.name())
+                .img(request.img())
                 .username(request.username())
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
@@ -115,7 +119,40 @@ public class UserServiceImpl implements UserService {
         if (request.enabled() != null) {
             user.setEnabled(request.enabled());
         }
+
+        if (request.name() != null) {
+            user.setName(request.name());
+        }
+
+        if (request.img() != null) {
+            user.setImg(request.img());
+        }
         return userMapper.toResponse(user);
+    }
+
+    @Override
+    public UserDetailResponse getUserById(UUID userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new BusinessException(ErrorCode.USER_NOT_FOUND)
+                );
+
+        return userMapper.toDetail(user);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(UUID id, ChangePasswordRequest request) {
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        if (!passwordEncoder.matches(request.oldPassword(), user.getPassword())) {
+            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+        }
+
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
     }
 }
 
