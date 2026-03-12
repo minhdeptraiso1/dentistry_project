@@ -85,6 +85,15 @@ public enum ErrorCode {
 
     EXPENSE_NOT_FOUND(110001, HttpStatus.NOT_FOUND, "Expense not found"),
     EXPENSE_INVALID_AMOUNT(110002, HttpStatus.BAD_REQUEST, "Invalid expense amount"),
+
+
+    // ===================== APPOINTMENT/SCHEDULING (111xxx) =====================
+    APPOINTMENT_NOT_FOUND(111001, HttpStatus.NOT_FOUND, "Appointment not found"),
+    DOCTOR_CAPACITY_NOT_SET(111002, HttpStatus.BAD_REQUEST, "Doctor shift capacity not set"),
+    DOCTOR_SHIFT_FULL(111003, HttpStatus.BAD_REQUEST, "Doctor shift is full"),
+    INVALID_APPOINTMENT_STATUS(111004, HttpStatus.BAD_REQUEST, "Invalid appointment status"),
+    DOCTOR_NOT_FOUND(111005, HttpStatus.NOT_FOUND, "Doctor not found"),
+    DOCTOR_ROLE_REQUIRED(111006, HttpStatus.BAD_REQUEST, "Doctor role required"),
     // ===================== SYSTEM (500xxx) =====================
     SYSTEM_ERROR(500001, HttpStatus.INTERNAL_SERVER_ERROR, "System error");
 
