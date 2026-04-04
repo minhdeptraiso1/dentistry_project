@@ -95,6 +95,9 @@ public enum ErrorCode {
     INVALID_APPOINTMENT_STATUS(111004, HttpStatus.BAD_REQUEST, "Invalid appointment status"),
     DOCTOR_NOT_FOUND(111005, HttpStatus.NOT_FOUND, "Doctor not found"),
     DOCTOR_ROLE_REQUIRED(111006, HttpStatus.BAD_REQUEST, "Doctor role required"),
+
+    // ===================== Notification (112xxx) =====================
+    NOTIFICATION_NOT_FOUND(112001, HttpStatus.NOT_FOUND, "Notification not found"),
     // ===================== SYSTEM (500xxx) =====================
     SYSTEM_ERROR(500001, HttpStatus.INTERNAL_SERVER_ERROR, "System error");
 
