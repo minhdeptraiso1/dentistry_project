@@ -1,8 +1,20 @@
 package com.project.base_v1.controller;
 
-import java.time.LocalDate;
-import java.util.UUID;
-
+import com.project.base_v1.dto.request.appointment.AssignDoctorRequest;
+import com.project.base_v1.dto.request.appointment.CreateAppointmentRequest;
+import com.project.base_v1.dto.response.appointment.AppointmentResponse;
+import com.project.base_v1.dto.response.core.ApiResponseSever;
+import com.project.base_v1.enums.WorkShift;
+import com.project.base_v1.service.AppointmentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,22 +30,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.project.base_v1.dto.request.appointment.AssignDoctorRequest;
-import com.project.base_v1.dto.request.appointment.CreateAppointmentRequest;
-import com.project.base_v1.dto.response.appointment.AppointmentResponse;
-import com.project.base_v1.dto.response.core.ApiResponseSever;
-import com.project.base_v1.enums.WorkShift;
-import com.project.base_v1.service.AppointmentService;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
+import java.time.LocalDate;
+import java.util.UUID;
 
 @Tag(name = "Appointment", description = "APIs for appointment scheduling (day + MORNING/AFTERNOON)")
 @SecurityRequirement(name = "bearerAuth")
@@ -144,38 +142,76 @@ public class AppointmentController {
             @PathVariable UUID id,
             @RequestParam(required = false) String note
     ) {
-            appointmentService.cancel(id, note);
-            return ApiResponseSever.ok(null);
+        appointmentService.cancel(id, note);
+        return ApiResponseSever.ok(null);
     }
-    @Operation(
-        summary = "Doctor start appointment",
-        description = "Change status: ASSIGNED -> IN_PROGRESS (DOCTOR only)"
-)
-        @ApiResponses({
-                @ApiResponse(responseCode = "200", description = "Started"),
-                @ApiResponse(responseCode = "400", description = "Invalid status"),
-                @ApiResponse(responseCode = "403", description = "Access denied"),
-                @ApiResponse(responseCode = "404", description = "Not found")
-        })
-        @PreAuthorize("hasRole('DOCTOR')")
-        @PostMapping("/{id}/start")
-        public ApiResponseSever<AppointmentResponse> start(@PathVariable UUID id) {
-        return ApiResponseSever.ok(appointmentService.start(id));
-        }
 
-        @Operation(
-                summary = "Doctor finish appointment",
-                description = "Change status: IN_PROGRESS -> DONE (DOCTOR only)"
-        )
-        @ApiResponses({
-                @ApiResponse(responseCode = "200", description = "Finished"),
-                @ApiResponse(responseCode = "400", description = "Invalid status"),
-                @ApiResponse(responseCode = "403", description = "Access denied"),
-                @ApiResponse(responseCode = "404", description = "Not found")
-        })
-        @PreAuthorize("hasRole('DOCTOR')")
-        @PostMapping("/{id}/finish")
-        public ApiResponseSever<AppointmentResponse> finish(@PathVariable UUID id) {
+    @Operation(
+            summary = "Doctor start appointment",
+            description = "Change status: ASSIGNED -> IN_PROGRESS (DOCTOR only)"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Started"),
+            @ApiResponse(responseCode = "400", description = "Invalid status"),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "404", description = "Not found")
+    })
+    @PreAuthorize("hasRole('DOCTOR')")
+    @PostMapping("/{id}/start")
+    public ApiResponseSever<AppointmentResponse> start(@PathVariable UUID id) {
+        return ApiResponseSever.ok(appointmentService.start(id));
+    }
+
+    @Operation(
+            summary = "Doctor finish appointment",
+            description = "Change status: IN_PROGRESS -> DONE (DOCTOR only)"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Finished"),
+            @ApiResponse(responseCode = "400", description = "Invalid status"),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "404", description = "Not found")
+    })
+    @PreAuthorize("hasRole('DOCTOR')")
+    @PostMapping("/{id}/finish")
+    public ApiResponseSever<AppointmentResponse> finish(@PathVariable UUID id) {
         return ApiResponseSever.ok(appointmentService.finish(id));
-        }
+    }
+
+    @Operation(
+            summary = "Get my appointments",
+            description = "<b>Roles:</b> PATIENT"
+    )
+    @PreAuthorize("hasRole('PATIENT')")
+    @GetMapping("/my")
+    public ApiResponseSever<Page<AppointmentResponse>> getMyAppointments(
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate date,
+
+            @ParameterObject Pageable pageable
+    ) {
+        return ApiResponseSever.ok(
+                appointmentService.getMyAppointments(date, pageable)
+        );
+    }
+
+    @Operation(
+            summary = "Get my appointment detail",
+            description = "<b>Roles:</b> PATIENT"
+    )
+    @PreAuthorize("hasRole('PATIENT')")
+    @GetMapping("/my/{id}")
+    public ApiResponseSever<AppointmentResponse> getMyAppointmentDetail(@PathVariable UUID id) {
+        return ApiResponseSever.ok(appointmentService.getMyAppointmentDetail(id));
+    }
+
+    @PreAuthorize("hasRole('PATIENT')")
+    @PostMapping("/my")
+    public ApiResponseSever<AppointmentResponse> createMy(
+            @Valid @RequestBody CreateAppointmentRequest request
+    ) {
+        return ApiResponseSever.ok(appointmentService.createMyAppointment(request));
+    }
 }

@@ -1,7 +1,7 @@
 package com.project.base_v1.security;
 
-import java.util.Arrays;
-
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,10 +15,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import static com.project.base_v1.security.SecurityEndpoints.PUBLIC;
+import java.util.Arrays;
 
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
+import static com.project.base_v1.security.SecurityEndpoints.PUBLIC;
 
 @Configuration
 @RequiredArgsConstructor
@@ -39,6 +38,34 @@ public class SecurityConfig {
                 )
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(401);
+                            response.setContentType("application/json");
+                            response.getWriter().write("""
+                                        {
+                                            "success": false,
+                                            "error": {
+                                                "code": 102005,
+                                                "message": "Invalid token"
+                                            }
+                                        }
+                                    """);
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(403);
+                            response.setContentType("application/json");
+                            response.getWriter().write("""
+                                        {
+                                            "success": false,
+                                            "error": {
+                                                "code": 102004,
+                                                "message": "Access denied"
+                                            }
+                                        }
+                                    """);
+                        })
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC).permitAll()
                         .anyRequest().authenticated()
@@ -60,7 +87,7 @@ public class SecurityConfig {
         configuration.setExposedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

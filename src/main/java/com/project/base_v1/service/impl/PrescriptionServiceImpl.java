@@ -233,4 +233,38 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                 .map(mapper::toSummary);
     }
 
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PrescriptionResponse> getMyPrescriptions() {
+
+        UUID patientId = CurrentUser.patientId();
+
+        if (patientId == null) {
+            throw new BusinessException(ErrorCode.PATIENT_NOT_FOUND);
+        }
+
+        List<Prescription> prescriptions =
+                rxRepo.findByPatientId(patientId);
+
+        return prescriptions.stream()
+                .map(mapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    public PrescriptionResponse getMyPrescriptionDetail(UUID id) {
+
+        UUID patientId = CurrentUser.patientId();
+
+        if (patientId == null) {
+            throw new BusinessException(ErrorCode.PATIENT_NOT_FOUND);
+        }
+
+        Prescription prescription = rxRepo
+                .findByIdAndPatient_Id(id, patientId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRESCRIPTION_NOT_FOUND));
+
+        return mapper.toResponse(prescription);
+    }
 }

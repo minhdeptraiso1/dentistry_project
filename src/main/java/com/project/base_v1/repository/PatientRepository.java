@@ -20,4 +20,6 @@ public interface PatientRepository
     Optional<String> findLatestPatientCode();
 
     boolean existsByPhoneAndDeletedAtIsNull(String phone);
+
+    Optional<Patient> findByPatientCode(String patientCode);
 }

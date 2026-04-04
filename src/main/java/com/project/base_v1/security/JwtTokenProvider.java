@@ -1,6 +1,10 @@
 package com.project.base_v1.security;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtBuilder;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,14 +29,20 @@ public class JwtTokenProvider {
         this.accessTokenExpiration = expiration * 1000;
     }
 
-    public String generateAccessToken(UUID userId, String username, String role) {
+    public String generateAccessToken(UUID userId, String username, String role, UUID patientId) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + accessTokenExpiration);
 
-        return Jwts.builder()
+        JwtBuilder builder = Jwts.builder()
                 .setSubject(userId.toString())
                 .claim("username", username)
-                .claim("role", role)
+                .claim("role", role);
+
+        if (patientId != null) {
+            builder.claim("patientId", patientId.toString());
+        }
+
+        return builder
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(key, SignatureAlgorithm.HS256)

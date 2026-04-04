@@ -1,15 +1,14 @@
 package com.project.base_v1.service;
 
-import java.time.LocalDate;
-import java.util.UUID;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
 import com.project.base_v1.dto.request.appointment.AssignDoctorRequest;
 import com.project.base_v1.dto.request.appointment.CreateAppointmentRequest;
 import com.project.base_v1.dto.response.appointment.AppointmentResponse;
 import com.project.base_v1.enums.WorkShift;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.time.LocalDate;
+import java.util.UUID;
 
 public interface AppointmentService {
     AppointmentResponse create(CreateAppointmentRequest request);
@@ -23,6 +22,12 @@ public interface AppointmentService {
     void cancel(UUID appointmentId, String note);
 
     AppointmentResponse start(UUID appointmentId);
-    
+
     AppointmentResponse finish(UUID appointmentId);
+
+    Page<AppointmentResponse> getMyAppointments(LocalDate date, Pageable pageable);
+
+    AppointmentResponse getMyAppointmentDetail(UUID id);
+
+    AppointmentResponse createMyAppointment(CreateAppointmentRequest request);
 }

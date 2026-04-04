@@ -1,6 +1,9 @@
 package com.project.base_v1.repository;
 
-import com.project.base_v1.entity.MedicalRecord;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -10,8 +13,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Optional;
-import java.util.UUID;
+import com.project.base_v1.entity.MedicalRecord;
 
 public interface MedicalRecordRepository
         extends JpaRepository<MedicalRecord, UUID>, JpaSpecificationExecutor<MedicalRecord> {
@@ -36,4 +38,14 @@ public interface MedicalRecordRepository
     @Override
     @EntityGraph(attributePaths = {"patient", "doctor"})
     Page<MedicalRecord> findAll(Specification<MedicalRecord> spec, Pageable pageable);
+
+    List<MedicalRecord> findByPatientId(UUID patientId);
+
+    @EntityGraph(attributePaths = {
+        "patient",
+        "doctor" 
+        })
+    Optional<MedicalRecord> findByIdAndPatient_Id(UUID id, UUID patientId);
+
+    
 }

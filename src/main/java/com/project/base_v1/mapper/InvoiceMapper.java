@@ -1,6 +1,7 @@
 package com.project.base_v1.mapper;
 
 import com.project.base_v1.dto.response.invoice.InvoiceItemResponse;
+import com.project.base_v1.dto.response.invoice.InvoiceMyResponse;
 import com.project.base_v1.dto.response.invoice.InvoiceResponse;
 import com.project.base_v1.dto.response.invoice.InvoiceSummaryResponse;
 import com.project.base_v1.dto.response.payment.PaymentResponse;
@@ -33,4 +34,10 @@ public interface InvoiceMapper {
     InvoiceItemResponse toItemResponse(InvoiceItem item);
 
     PaymentResponse toPaymentResponse(Payment payment);
+
+    @Mapping(target = "patientId", source = "patient.id")
+    @Mapping(target = "patientCode", source = "patient.patientCode")
+    @Mapping(target = "patientName", source = "patient.fullName")
+    @Mapping(target = "items", source = "items")
+    InvoiceMyResponse toMyResponse(Invoice invoice);
 }

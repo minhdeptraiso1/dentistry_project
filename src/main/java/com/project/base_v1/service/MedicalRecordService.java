@@ -7,6 +7,7 @@ import com.project.base_v1.dto.response.medical_record.MedicalRecordResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface MedicalRecordService {
@@ -19,4 +20,8 @@ public interface MedicalRecordService {
     MedicalRecordResponse update(UUID id, UpdateMedicalRecordRequest request);
 
     void delete(UUID id);
+
+    List<MedicalRecordResponse> getMyMedicalRecords();
+
+    MedicalRecordResponse getMyMedicalRecordDetail(UUID id);
 }

@@ -1,6 +1,7 @@
 package com.project.base_v1.controller;
 
 import com.project.base_v1.dto.request.auth.LoginRequest;
+import com.project.base_v1.dto.request.auth.RegisterPatientRequest;
 import com.project.base_v1.dto.response.auth.AuthResponse;
 import com.project.base_v1.dto.response.core.ApiResponseSever;
 import com.project.base_v1.service.AuthService;
@@ -125,5 +126,10 @@ public class AuthController {
         String accessToken = authHeader.substring(7);
         authService.logout(accessToken, refreshToken);
         return ApiResponseSever.ok(null);
+    }
+
+    @PostMapping("/register-patient")
+    public void registerPatient(@RequestBody RegisterPatientRequest request) {
+        authService.registerPatient(request);
     }
 }

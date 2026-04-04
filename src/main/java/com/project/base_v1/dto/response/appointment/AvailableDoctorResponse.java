@@ -2,21 +2,16 @@ package com.project.base_v1.dto.response.appointment;
 
 import java.util.UUID;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
-@Getter
-@AllArgsConstructor
-public class AvailableDoctorResponse {
+public record AvailableDoctorResponse(
+        UUID doctorId,
 
-    private UUID doctorId;
+        String username,
 
-    private String username;
+        String doctorName,
 
-    private String doctorName;
+        Integer maxPatients,
 
-    private Integer maxPatients;
-
-    private Integer currentPatients;
-
+        Integer currentPatients
+) {
 }

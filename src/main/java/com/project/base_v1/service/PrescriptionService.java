@@ -9,6 +9,7 @@ import com.project.base_v1.dto.response.prescription.PrescriptionSummaryResponse
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface PrescriptionService {
@@ -23,5 +24,9 @@ public interface PrescriptionService {
     void cancel(UUID id, String note);
 
     Page<PrescriptionSummaryResponse> search(PrescriptionSearchRequest request, Pageable pageable);
+
+    List<PrescriptionResponse> getMyPrescriptions();
+
+    PrescriptionResponse getMyPrescriptionDetail(UUID id);
 
 }
