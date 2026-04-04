@@ -21,6 +21,7 @@ import com.project.base_v1.repository.UserRepository;
 import com.project.base_v1.repository.spec.AppointmentSpecification;
 import com.project.base_v1.security.CurrentUser;
 import com.project.base_v1.service.AppointmentService;
+import com.project.base_v1.service.NotificationService;
 import com.project.base_v1.service.helper.AppointmentCodeGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -42,6 +44,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final DoctorShiftCapacityRepository capacityRepo;
     private final AppointmentCodeGenerator codeGen;
     private final AppointmentMapper mapper;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -62,6 +65,15 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .priority(priority)
                 .note(request.note())
                 .build();
+        // push notification cho bệnh nhân khi tạo lịch khám mới
+        Optional<User> patientUserOpt = userRepo.findByPatient_Id(patient.getId());
+        patientUserOpt.ifPresent(user ->
+                notificationService.pushToUser(
+                        user.getId(),
+                        "Lịch khám mới",
+                        "Bạn có lịch khám " + appt.getAppointmentCode() + " vào ngày " + appt.getWorkDate()
+                )
+        );
 
         // nếu truyền doctorId => assign luôn
         if (request.doctorId() != null) {
@@ -76,6 +88,12 @@ public class AppointmentServiceImpl implements AppointmentService {
 
             appt.setDoctor(doctor);
             appt.setStatus(AppointmentStatus.ASSIGNED);
+            // push notification cho bác sĩ được assign
+            notificationService.pushToUser(
+                    appt.getDoctor().getId(),
+                    "Có lịch khám mới",
+                    "Bạn được phân công lịch khám " + appt.getAppointmentCode() + " vào ngày " + appt.getWorkDate()
+            );
         }
 
         return mapper.toResponse(appointmentRepo.save(appt));
@@ -126,6 +144,21 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         appt.setDoctor(doctor);
         appt.setStatus(AppointmentStatus.ASSIGNED);
+
+        Optional<User> patientUserOpt = userRepo.findByPatient_Id(appt.getPatient().getId());
+        patientUserOpt.ifPresent(user ->
+                notificationService.pushToUser(
+                        user.getId(),
+                        "Lịch khám đã được xác nhận",
+                        "Lịch khám " + appt.getAppointmentCode() + " đã được phân công bác sĩ."
+                )
+        );
+
+        notificationService.pushToUser(
+                doctor.getId(),
+                "Bạn có lịch khám mới",
+                "Bạn được phân công lịch khám " + appt.getAppointmentCode()
+        );
 
         return mapper.toResponse(appointmentRepo.save(appt));
     }

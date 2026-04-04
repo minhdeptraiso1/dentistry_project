@@ -35,6 +35,7 @@ import com.project.base_v1.repository.UserRepository;
 import com.project.base_v1.repository.spec.InvoiceSpecification;
 import com.project.base_v1.security.CurrentUser;
 import com.project.base_v1.service.InvoiceService;
+import com.project.base_v1.service.NotificationService;
 import com.project.base_v1.service.helper.InvoiceCodeGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -47,6 +48,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -63,7 +65,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     private final InvoiceCodeGenerator codeGen;
     private final InvoiceMapper mapper;
-
+    private final NotificationService notificationService;
     private final PaymentRepository paymentRepo;
 
     @Override
@@ -315,6 +317,16 @@ public class InvoiceServiceImpl implements InvoiceService {
         if (newRemaining.signum() == 0) {
             invoice.setStatus(InvoiceStatus.PAID);
             invoice.setPaidAt(Instant.now());
+            //
+            Optional<User> patientUserOpt = userRepo.findByPatient_Id(invoice.getPatient().getId());
+            patientUserOpt.ifPresent(user ->
+                    notificationService.pushToUser(
+                            user.getId(),
+                            "Thanh toán thành công",
+                            "Hóa đơn " + invoice.getInvoiceCode() + " đã được thanh toán."
+                    )
+            );
+
         } else {
             invoice.setStatus(InvoiceStatus.PARTIALLY_PAID);
         }
