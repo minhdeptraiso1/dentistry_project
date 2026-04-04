@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -31,4 +32,15 @@ PrescriptionRepository extends JpaRepository<Prescription, UUID>, JpaSpecificati
     @Override
     @EntityGraph(attributePaths = {"medicalRecord", "patient", "doctor"})
     Page<Prescription> findAll(Specification<Prescription> spec, Pageable pageable);
+
+    List<Prescription> findByPatientId(UUID patientId);
+
+    @EntityGraph(attributePaths = {
+            "medicalRecord",
+            "patient",
+            "doctor",
+            "items",
+            "items.medicine"
+    })
+    Optional<Prescription> findByIdAndPatient_Id(UUID id, UUID patientId);
 }

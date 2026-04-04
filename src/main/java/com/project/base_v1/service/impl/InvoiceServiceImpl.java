@@ -6,6 +6,7 @@ import com.project.base_v1.dto.request.invoice.CreateInvoiceRequest;
 import com.project.base_v1.dto.request.invoice.InvoiceSearchRequest;
 import com.project.base_v1.dto.request.invoice.IssueInvoiceRequest;
 import com.project.base_v1.dto.request.payment.AddPaymentRequest;
+import com.project.base_v1.dto.response.invoice.InvoiceMyResponse;
 import com.project.base_v1.dto.response.invoice.InvoiceResponse;
 import com.project.base_v1.dto.response.invoice.InvoiceSummaryResponse;
 import com.project.base_v1.entity.Invoice;
@@ -404,5 +405,36 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoice.setDiscountAmount(totalDiscount);
         invoice.setTotalAmount(total);
         // paidAmount giữ nguyên (create = 0)
+    }
+
+    @Override
+    public List<InvoiceMyResponse> getMyInvoices() {
+
+        UUID patientId = CurrentUser.patientId();
+
+        if (patientId == null) {
+            throw new BusinessException(ErrorCode.PATIENT_NOT_FOUND);
+        }
+
+        List<Invoice> invoices =
+                invoiceRepo.findByPatientId(patientId);
+
+        return invoices.stream()
+                .map(mapper::toMyResponse)
+                .toList();
+    }
+
+    @Override
+    public InvoiceMyResponse getMyInvoiceDetail(UUID id) {
+
+        UUID patientId = CurrentUser.patientId();
+
+        Invoice invoice = invoiceRepo.findDetailById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVOICE_NOT_FOUND));
+
+        if (!invoice.getPatient().getId().equals(patientId)) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+        return mapper.toMyResponse(invoice);
     }
 }

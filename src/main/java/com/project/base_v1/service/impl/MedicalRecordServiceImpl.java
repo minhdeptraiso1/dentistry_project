@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -49,8 +50,8 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_REQUIRED));
 
         if (doctor.getRole() != UserRole.DOCTOR && doctor.getRole() != UserRole.ADMIN) {
-    throw new BusinessException(ErrorCode.BAD_REQUEST);
-}
+            throw new BusinessException(ErrorCode.BAD_REQUEST);
+        }
 
 
         Instant visitDate = request.visitDate() != null ? request.visitDate() : Instant.now();
@@ -126,5 +127,39 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
         record.setDeletedAt(Instant.now());
         record.setDeletedBy(CurrentUser.username());
         medicalRecordRepository.save(record);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MedicalRecordResponse> getMyMedicalRecords() {
+
+        UUID patientId = CurrentUser.patientId();
+
+        if (patientId == null) {
+            throw new BusinessException(ErrorCode.MEDICAL_RECORD_NOT_FOUND);
+        }
+
+        List<MedicalRecord> records =
+                medicalRecordRepository.findByPatientId(patientId);
+
+        return records.stream()
+                .map(medicalRecordMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    public MedicalRecordResponse getMyMedicalRecordDetail(UUID id) {
+
+        UUID patientId = CurrentUser.patientId();
+
+        if (patientId == null) {
+            throw new BusinessException(ErrorCode.PATIENT_NOT_FOUND);
+        }
+
+        MedicalRecord record = medicalRecordRepository
+                .findByIdAndPatient_Id(id, patientId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEDICAL_RECORD_NOT_FOUND));
+
+        return medicalRecordMapper.toResponse(record);
     }
 }

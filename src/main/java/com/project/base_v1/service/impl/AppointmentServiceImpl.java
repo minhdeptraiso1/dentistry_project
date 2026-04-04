@@ -213,4 +213,69 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         return mapper.toResponse(appointmentRepo.save(appt));
     }
+
+    @Override
+    public Page<AppointmentResponse> getMyAppointments(
+            LocalDate date,
+            Pageable pageable
+    ) {
+
+        UUID patientId = CurrentUser.patientId();
+
+        if (patientId == null) {
+            throw new BusinessException(ErrorCode.PATIENT_NOT_FOUND);
+        }
+
+        Specification<Appointment> spec = Specification.allOf(
+                AppointmentSpecification.hasPatientId(patientId),
+                AppointmentSpecification.hasDate(date)
+        );
+
+        return appointmentRepo
+                .findAll(spec, pageable)
+                .map(mapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AppointmentResponse getMyAppointmentDetail(UUID id) {
+
+        UUID patientId = CurrentUser.patientId();
+
+        if (patientId == null) {
+            throw new BusinessException(ErrorCode.PATIENT_NOT_FOUND);
+        }
+
+        Appointment appointment = appointmentRepo.findByIdAndPatient_Id(id, patientId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.APPOINTMENT_NOT_FOUND));
+
+        return mapper.toResponse(appointment);
+    }
+
+    @Override
+    @Transactional
+    public AppointmentResponse createMyAppointment(CreateAppointmentRequest request) {
+
+        UUID patientId = CurrentUser.patientId();
+
+        if (patientId == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST);
+        }
+
+        Patient patient = patientRepo.findById(patientId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PATIENT_NOT_FOUND));
+
+        Appointment appt = Appointment.builder()
+                .id(UUID.randomUUID())
+                .appointmentCode(codeGen.nextCode())
+                .patient(patient)
+                .workDate(request.workDate())
+                .shift(request.shift())
+                .status(AppointmentStatus.WAITING)
+                .priority(AppointmentPriority.NORMAL)
+                .note(request.note())
+                .build();
+
+        return mapper.toResponse(appointmentRepo.save(appt));
+    }
 }

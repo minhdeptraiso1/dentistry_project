@@ -2,12 +2,11 @@ server:
   servlet:
     context-path: /api
 
-
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/nha_khoa_db
     username: postgres
-    password: 081003
+    password: 123456
 
   jpa:
     hibernate:
@@ -30,6 +29,3 @@ jwt:
 springdoc:
   swagger-ui:
     path: /swagger
-
-
-

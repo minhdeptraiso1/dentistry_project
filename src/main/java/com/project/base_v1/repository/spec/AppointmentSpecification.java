@@ -22,6 +22,11 @@ public class AppointmentSpecification {
         return (root, query, cb) -> doctorId == null ? null : cb.equal(root.get("doctor").get("id"), doctorId);
     }
 
+    public static Specification<Appointment> hasPatientId(UUID patientId) {
+        return (root, query, cb) ->
+                patientId == null ? null : cb.equal(root.get("patient").get("id"), patientId);
+    }
+
     public static Specification<Appointment> hasStatus(String status) {
         return (root, query, cb) -> {
             if (status == null || status.isBlank()) return null;

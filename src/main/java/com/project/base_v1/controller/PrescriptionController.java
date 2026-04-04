@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 @Tag(name = "Prescription", description = "APIs for prescriptions & dispensing (deduct stock)")
@@ -108,5 +109,18 @@ public class PrescriptionController {
             @ParameterObject Pageable pageable
     ) {
         return ApiResponseSever.ok(prescriptionService.search(request, pageable));
+    }
+
+    @PreAuthorize("hasRole('PATIENT')")
+    @GetMapping("/my")
+    public List<PrescriptionResponse> getMyPrescriptions() {
+        return prescriptionService.getMyPrescriptions();
+    }
+
+    @Operation(summary = "Get my prescription detail", description = "<b>Roles:</b> PATIENT")
+    @PreAuthorize("hasRole('PATIENT')")
+    @GetMapping("/my/{id}")
+    public ApiResponseSever<PrescriptionResponse> getMyPrescriptionDetail(@PathVariable UUID id) {
+        return ApiResponseSever.ok(prescriptionService.getMyPrescriptionDetail(id));
     }
 }

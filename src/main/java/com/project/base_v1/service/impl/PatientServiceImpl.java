@@ -112,4 +112,18 @@ public class PatientServiceImpl implements PatientService {
 
         patientRepository.save(patient);
     }
+
+    public PatientResponse getMyProfile() {
+
+        UUID patientId = CurrentUser.patientId();
+
+        if (patientId == null) {
+            throw new BusinessException(ErrorCode.PATIENT_NOT_FOUND);
+        }
+
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PATIENT_NOT_FOUND));
+
+        return patientMapper.toResponse(patient);
+    }
 }

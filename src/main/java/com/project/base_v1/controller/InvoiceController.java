@@ -6,6 +6,7 @@ import com.project.base_v1.dto.request.invoice.InvoiceSearchRequest;
 import com.project.base_v1.dto.request.invoice.IssueInvoiceRequest;
 import com.project.base_v1.dto.request.payment.AddPaymentRequest;
 import com.project.base_v1.dto.response.core.ApiResponseSever;
+import com.project.base_v1.dto.response.invoice.InvoiceMyResponse;
 import com.project.base_v1.dto.response.invoice.InvoiceResponse;
 import com.project.base_v1.dto.response.invoice.InvoiceSummaryResponse;
 import com.project.base_v1.service.InvoiceService;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 @Tag(name = "Invoice", description = "APIs for invoices & payments")
@@ -188,5 +190,14 @@ public class InvoiceController {
         return ApiResponseSever.ok(invoiceService.search(request, pageable));
     }
 
+    @GetMapping("/my")
+    public List<InvoiceMyResponse> getMyInvoices() {
+        return invoiceService.getMyInvoices();
+    }
+
+    @GetMapping("/my/{id}")
+    public InvoiceMyResponse getMyInvoiceDetail(@PathVariable UUID id) {
+        return invoiceService.getMyInvoiceDetail(id);
+    }
 
 }

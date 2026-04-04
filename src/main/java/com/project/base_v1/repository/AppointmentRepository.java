@@ -42,4 +42,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID>,
     @Override
     @EntityGraph(attributePaths = {"patient", "doctor"})
     Page<Appointment> findAll(Specification<Appointment> spec, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"patient", "doctor"})
+    Optional<Appointment> findByIdAndPatient_Id(UUID id, UUID patientId);
 }

@@ -213,4 +213,9 @@ public class PatientController {
         patientService.delete(id);
         return ApiResponseSever.ok(null);
     }
+
+    @GetMapping("/me")
+    public PatientResponse getMyProfile() {
+        return patientService.getMyProfile();
+    }
 }

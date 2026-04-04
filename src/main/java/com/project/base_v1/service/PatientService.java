@@ -19,4 +19,6 @@ public interface PatientService {
     PatientResponse update(UUID id, UpdatePatientRequest request);
 
     void delete(UUID id);
+
+    PatientResponse getMyProfile();
 }

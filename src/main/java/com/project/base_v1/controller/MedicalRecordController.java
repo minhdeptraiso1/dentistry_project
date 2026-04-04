@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 @Tag(
@@ -156,5 +157,18 @@ public class MedicalRecordController {
     public ApiResponseSever<Void> delete(@PathVariable UUID id) {
         medicalRecordService.delete(id);
         return ApiResponseSever.ok(null);
+    }
+
+    @PreAuthorize("hasRole('PATIENT')")
+    @GetMapping("/my")
+    public List<MedicalRecordResponse> getMyMedicalRecords() {
+        return medicalRecordService.getMyMedicalRecords();
+    }
+
+    @Operation(summary = "Get my medical record detail", description = "<b>Roles:</b> PATIENT")
+    @PreAuthorize("hasRole('PATIENT')")
+    @GetMapping("/my/{id}")
+    public ApiResponseSever<MedicalRecordResponse> getMyMedicalRecordDetail(@PathVariable UUID id) {
+        return ApiResponseSever.ok(medicalRecordService.getMyMedicalRecordDetail(id));
     }
 }

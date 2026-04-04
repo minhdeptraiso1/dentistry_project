@@ -1,11 +1,13 @@
 package com.project.base_v1.security;
 
 import io.jsonwebtoken.Claims;
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.AccessLevel;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -52,11 +54,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // 2️⃣ Validate JWT
             Claims claims = jwtTokenProvider.validateToken(token).getBody();
+
             String role = claims.get("role", String.class);
 
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
-                            claims.get("username"),
+                            claims,
                             null,
                             List.of(new SimpleGrantedAuthority("ROLE_" + role))
                     );

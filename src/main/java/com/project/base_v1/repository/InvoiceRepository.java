@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,5 +26,13 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID>, JpaSpec
     @Override
     @EntityGraph(attributePaths = {"patient", "cashier"})
     Page<Invoice> findAll(Specification<Invoice> spec, Pageable pageable);
+
+    @EntityGraph(attributePaths = {
+            "patient",
+            "cashier",
+            "items",
+    })
+    List<Invoice> findByPatientId(UUID patientId);
+
 }
 

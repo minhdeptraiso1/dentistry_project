@@ -47,7 +47,7 @@ public class ExpenseController {
             @ApiResponse(responseCode = "201", description = "Created"),
             @ApiResponse(responseCode = "400", description = "Invalid request")
     })
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','CASHIER')")
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public ApiResponseSever<ExpenseResponse> create(@Valid @RequestBody CreateExpenseRequest request) {
@@ -55,14 +55,14 @@ public class ExpenseController {
     }
 
     @Operation(summary = "Get expense by id", description = "<b>Roles:</b> ADMIN")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','CASHIER')")
     @GetMapping("/{id}")
     public ApiResponseSever<ExpenseResponse> getById(@PathVariable UUID id) {
         return ApiResponseSever.ok(expenseService.getById(id));
     }
 
     @Operation(summary = "Search expenses", description = "<b>Roles:</b> ADMIN")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','CASHIER')")
     @GetMapping
     public ApiResponseSever<Page<ExpenseResponse>> search(
             @ParameterObject ExpenseSearchRequest request,
@@ -72,7 +72,7 @@ public class ExpenseController {
     }
 
     @Operation(summary = "Update expense", description = "<b>Roles:</b> ADMIN")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','CASHIER')")
     @PutMapping("/{id}")
     public ApiResponseSever<ExpenseResponse> update(
             @PathVariable UUID id,
@@ -82,7 +82,7 @@ public class ExpenseController {
     }
 
     @Operation(summary = "Delete expense (soft delete)", description = "<b>Roles:</b> ADMIN")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','CASHIER')")
     @DeleteMapping("/{id}")
     public ApiResponseSever<Void> delete(@PathVariable UUID id) {
         expenseService.delete(id);

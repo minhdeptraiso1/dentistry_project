@@ -1,12 +1,5 @@
 package com.project.base_v1.service.impl;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.project.base_v1.dto.request.appointment.SetDoctorShiftCapacityRequest;
 import com.project.base_v1.dto.response.appointment.AvailableDoctorResponse;
 import com.project.base_v1.entity.DoctorShiftCapacity;
@@ -19,8 +12,13 @@ import com.project.base_v1.repository.AppointmentRepository;
 import com.project.base_v1.repository.DoctorShiftCapacityRepository;
 import com.project.base_v1.repository.UserRepository;
 import com.project.base_v1.service.DoctorCapacityService;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -87,7 +85,7 @@ public class DoctorCapacityServiceImpl implements DoctorCapacityService {
                     );
 
                 })
-                .filter(res -> res.getCurrentPatients() < res.getMaxPatients()) // bác sĩ còn slot
+                .filter(res -> res.currentPatients() < res.maxPatients()) // bác sĩ còn slot
                 .toList();
     }
 }

@@ -1,12 +1,16 @@
 package com.project.base_v1.service.impl;
 
 import com.project.base_v1.dto.request.auth.LoginRequest;
+import com.project.base_v1.dto.request.auth.RegisterPatientRequest;
 import com.project.base_v1.dto.response.auth.AuthResponse;
+import com.project.base_v1.entity.Patient;
 import com.project.base_v1.entity.TokenSession;
 import com.project.base_v1.entity.User;
 import com.project.base_v1.enums.AuditAction;
+import com.project.base_v1.enums.UserRole;
 import com.project.base_v1.exception.BusinessException;
 import com.project.base_v1.exception.ErrorCode;
+import com.project.base_v1.repository.PatientRepository;
 import com.project.base_v1.repository.TokenSessionRepository;
 import com.project.base_v1.repository.UserRepository;
 import com.project.base_v1.security.JwtTokenProvider;
@@ -21,6 +25,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -40,6 +45,8 @@ public class AuthServiceImpl implements AuthService {
     TokenBlacklistService tokenBlacklistService;
     LoginRateLimiter loginRateLimiter;
     AuditLogService auditLogService;
+    PatientRepository patientRepository;
+    PasswordEncoder passwordEncoder;
 
     @Override
     public AuthResponse login(LoginRequest request) {
@@ -85,7 +92,8 @@ public class AuthServiceImpl implements AuthService {
                 jwtTokenProvider.generateAccessToken(
                         user.getId(),
                         user.getUsername(),
-                        user.getRole().name()
+                        user.getRole().name(),
+                        user.getPatient() != null ? user.getPatient().getId() : null
                 );
 
         auditLogService.log(user.getId(), AuditAction.LOGIN.name());
@@ -110,10 +118,48 @@ public class AuthServiceImpl implements AuthService {
                 jwtTokenProvider.generateAccessToken(
                         user.getId(),
                         user.getUsername(),
-                        user.getRole().name()
+                        user.getRole().name(),
+                        user.getPatient() != null ? user.getPatient().getId() : null
                 );
 
         return new AuthResponse(newAccessToken, refreshToken);
+    }
+
+    @Override
+    public void registerPatient(RegisterPatientRequest request) {
+
+        // 1. validate username
+        if (userRepository.existsByUsername(request.username())) {
+            throw new BusinessException(ErrorCode.USERNAME_ALREADY_EXISTS);
+        }
+
+
+        if (userRepository.existsByEmail(request.email())) {
+            throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
+        }
+
+
+        Patient patient = patientRepository.findByPatientCode(request.patientCode())
+                .orElseThrow(() -> new BusinessException(ErrorCode.PATIENT_NOT_FOUND));
+
+
+        if (userRepository.existsByPatientId(patient.getId())) {
+            throw new BusinessException(ErrorCode.PATIENT_ALREADY_HAS_ACCOUNT);
+        }
+
+
+        User user = User.builder()
+                .id(UUID.randomUUID())
+                .name(patient.getFullName())
+                .username(request.username())
+                .email(request.email())
+                .password(passwordEncoder.encode(request.password()))
+                .role(UserRole.PATIENT)
+                .enabled(true)
+                .patient(patient)
+                .build();
+
+        userRepository.save(user);
     }
 
     @Override
