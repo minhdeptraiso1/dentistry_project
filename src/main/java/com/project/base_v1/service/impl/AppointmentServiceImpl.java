@@ -2,6 +2,7 @@ package com.project.base_v1.service.impl;
 
 import com.project.base_v1.dto.request.appointment.AssignDoctorRequest;
 import com.project.base_v1.dto.request.appointment.CreateAppointmentRequest;
+import com.project.base_v1.dto.request.appointment.CreateFollowUpAppointmentRequest;
 import com.project.base_v1.dto.response.appointment.AppointmentResponse;
 import com.project.base_v1.entity.Appointment;
 import com.project.base_v1.entity.DoctorShiftCapacity;
@@ -31,6 +32,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -59,13 +62,16 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .id(UUID.randomUUID())
                 .appointmentCode(codeGen.nextCode())
                 .patient(patient)
+                .parentId(null)
+                .sequenceNo(1)
                 .workDate(request.workDate())
+                .actualDate(null)
                 .shift(request.shift())
                 .status(AppointmentStatus.WAITING)
                 .priority(priority)
                 .note(request.note())
                 .build();
-        // push notification cho bệnh nhân khi tạo lịch khám mới
+
         Optional<User> patientUserOpt = userRepo.findByPatient_Id(patient.getId());
         patientUserOpt.ifPresent(user ->
                 notificationService.pushToUser(
@@ -75,7 +81,6 @@ public class AppointmentServiceImpl implements AppointmentService {
                 )
         );
 
-        // nếu truyền doctorId => assign luôn
         if (request.doctorId() != null) {
             User doctor = userRepo.findById(request.doctorId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
@@ -88,7 +93,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
             appt.setDoctor(doctor);
             appt.setStatus(AppointmentStatus.ASSIGNED);
-            // push notification cho bác sĩ được assign
+
             notificationService.pushToUser(
                     appt.getDoctor().getId(),
                     "Có lịch khám mới",
@@ -99,8 +104,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         return mapper.toResponse(appointmentRepo.save(appt));
     }
 
-    @Transactional(readOnly = true)
     @Override
+    @Transactional(readOnly = true)
     public AppointmentResponse getById(UUID id) {
 
         Appointment appointment = appointmentRepo.findById(id)
@@ -139,7 +144,6 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new BusinessException(ErrorCode.DOCTOR_ROLE_REQUIRED);
         }
 
-        // nếu đã assign bác sĩ trước đó và đổi bác sĩ => cần check quota của bác sĩ mới
         checkCapacityOrThrow(doctor.getId(), appt.getWorkDate(), appt.getShift());
 
         appt.setDoctor(doctor);
@@ -165,6 +169,70 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional
+    public AppointmentResponse createFollowUp(UUID appointmentId, CreateFollowUpAppointmentRequest request) {
+
+        Appointment parent = appointmentRepo.findById(appointmentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.APPOINTMENT_NOT_FOUND));
+
+        Appointment next = Appointment.builder()
+                .id(UUID.randomUUID())
+                .appointmentCode(codeGen.nextCode())
+                .patient(parent.getPatient())
+                .parentId(parent.getId())
+                .sequenceNo(parent.getSequenceNo() == null ? 2 : parent.getSequenceNo() + 1)
+                .workDate(request.workDate())
+                .actualDate(null)
+                .shift(request.shift())
+                .status(AppointmentStatus.WAITING)
+                .priority(parent.getPriority())
+                .note(request.note())
+                .build();
+
+        User assignedDoctor = null;
+
+        if (request.doctorId() != null) {
+            assignedDoctor = userRepo.findById(request.doctorId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
+
+            if (assignedDoctor.getRole() != UserRole.DOCTOR) {
+                throw new BusinessException(ErrorCode.DOCTOR_ROLE_REQUIRED);
+            }
+
+            checkCapacityOrThrow(assignedDoctor.getId(), request.workDate(), request.shift());
+        } else if (parent.getDoctor() != null) {
+            UUID parentDoctorId = parent.getDoctor().getId();
+            if (canKeepDoctor(parentDoctorId, request.workDate(), request.shift())) {
+                assignedDoctor = parent.getDoctor();
+            }
+        }
+
+        if (assignedDoctor != null) {
+            next.setDoctor(assignedDoctor);
+            next.setStatus(AppointmentStatus.ASSIGNED);
+
+            notificationService.pushToUser(
+                    assignedDoctor.getId(),
+                    "Bạn có lịch tái khám mới",
+                    "Bạn được phân công lịch tái khám " + next.getAppointmentCode() + " vào ngày " + next.getWorkDate()
+            );
+        }
+
+        Appointment saved = appointmentRepo.save(next);
+
+        Optional<User> patientUserOpt = userRepo.findByPatient_Id(parent.getPatient().getId());
+        patientUserOpt.ifPresent(user ->
+                notificationService.pushToUser(
+                        user.getId(),
+                        "Đã tạo lịch hẹn tiếp theo",
+                        "Lịch hẹn tiếp theo của bạn là " + saved.getAppointmentCode() + " vào ngày " + saved.getWorkDate()
+                )
+        );
+
+        return mapper.toResponse(saved);
+    }
+
+    @Override
+    @Transactional
     public void cancel(UUID appointmentId, String note) {
 
         Appointment appt = appointmentRepo.findById(appointmentId)
@@ -175,16 +243,12 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
         appt.setStatus(AppointmentStatus.CANCELLED);
-        if (note != null) appt.setNote(note);
-
-        // soft delete nếu em muốn “xóa khỏi danh sách”
-        // appt.setDeletedAt(Instant.now());
-        // appt.setDeletedBy(CurrentUser.username());
+        if (note != null) {
+            appt.setNote(note);
+        }
 
         appointmentRepo.save(appt);
     }
-
-    // ===================== helpers =====================
 
     private void checkCapacityOrThrow(UUID doctorId, LocalDate date, WorkShift shift) {
 
@@ -199,6 +263,60 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
     }
 
+    private boolean canKeepDoctor(UUID doctorId, LocalDate date, WorkShift shift) {
+        Optional<DoctorShiftCapacity> capOpt = capacityRepo.findByDoctor_IdAndWorkDateAndShift(doctorId, date, shift);
+        if (capOpt.isEmpty()) {
+            return false;
+        }
+
+        long assigned = appointmentRepo.countAssignedInShift(doctorId, date, shift);
+        return assigned < capOpt.get().getMaxPatients();
+    }
+
+    private void shiftChildAppointments(UUID parentId, long delayDays) {
+        if (delayDays <= 0) {
+            return;
+        }
+
+        List<Appointment> children = appointmentRepo.findByParentIdOrderBySequenceNoAsc(parentId);
+
+        for (Appointment child : children) {
+            if (child.getStatus() == AppointmentStatus.CANCELLED || child.getStatus() == AppointmentStatus.DONE) {
+                continue;
+            }
+
+            LocalDate newDate = child.getWorkDate().plusDays(delayDays);
+            child.setWorkDate(newDate);
+
+            if (child.getDoctor() != null) {
+                UUID doctorId = child.getDoctor().getId();
+
+                if (!canKeepDoctor(doctorId, newDate, child.getShift())) {
+                    child.setDoctor(null);
+                    child.setStatus(AppointmentStatus.WAITING);
+
+                    String extraNote = "Bác sĩ cũ không còn đủ slot sau khi dời lịch tự động.";
+                    child.setNote(child.getNote() == null || child.getNote().isBlank()
+                            ? extraNote
+                            : child.getNote() + " | " + extraNote);
+                }
+            }
+
+            appointmentRepo.save(child);
+
+            Optional<User> patientUserOpt = userRepo.findByPatient_Id(child.getPatient().getId());
+            patientUserOpt.ifPresent(user ->
+                    notificationService.pushToUser(
+                            user.getId(),
+                            "Lịch khám đã được dời",
+                            "Lịch khám " + child.getAppointmentCode() + " đã được dời sang ngày " + child.getWorkDate()
+                    )
+            );
+
+            shiftChildAppointments(child.getId(), delayDays);
+        }
+    }
+
     @Override
     @Transactional
     public AppointmentResponse start(UUID appointmentId) {
@@ -206,12 +324,10 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appt = appointmentRepo.findById(appointmentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.APPOINTMENT_NOT_FOUND));
 
-        // Chỉ DOCTOR được start và chỉ start khi đã ASSIGNED
         if (appt.getStatus() != AppointmentStatus.ASSIGNED) {
             throw new BusinessException(ErrorCode.INVALID_APPOINTMENT_STATUS);
         }
 
-        // đảm bảo đúng bác sĩ đang login
         String username = CurrentUser.username();
         if (appt.getDoctor() == null || appt.getDoctor().getUsername() == null
                 || !appt.getDoctor().getUsername().equals(username)) {
@@ -230,21 +346,28 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appt = appointmentRepo.findById(appointmentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.APPOINTMENT_NOT_FOUND));
 
-        // chỉ finish khi đang IN_PROGRESS
         if (appt.getStatus() != AppointmentStatus.IN_PROGRESS) {
             throw new BusinessException(ErrorCode.INVALID_APPOINTMENT_STATUS);
         }
 
-        // đảm bảo đúng bác sĩ đang login
         String username = CurrentUser.username();
         if (appt.getDoctor() == null || appt.getDoctor().getUsername() == null
                 || !appt.getDoctor().getUsername().equals(username)) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
 
+        LocalDate actualDate = LocalDate.now();
+        appt.setActualDate(actualDate);
         appt.setStatus(AppointmentStatus.DONE);
 
-        return mapper.toResponse(appointmentRepo.save(appt));
+        Appointment saved = appointmentRepo.save(appt);
+
+        long delayDays = ChronoUnit.DAYS.between(appt.getWorkDate(), actualDate);
+        if (delayDays > 0) {
+            shiftChildAppointments(appt.getId(), delayDays);
+        }
+
+        return mapper.toResponse(saved);
     }
 
     @Override
@@ -302,7 +425,10 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .id(UUID.randomUUID())
                 .appointmentCode(codeGen.nextCode())
                 .patient(patient)
+                .parentId(null)
+                .sequenceNo(1)
                 .workDate(request.workDate())
+                .actualDate(null)
                 .shift(request.shift())
                 .status(AppointmentStatus.WAITING)
                 .priority(AppointmentPriority.NORMAL)

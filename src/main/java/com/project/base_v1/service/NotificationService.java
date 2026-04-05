@@ -1,13 +1,14 @@
 package com.project.base_v1.service;
 
 import com.project.base_v1.dto.response.notification.NotificationResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface NotificationService {
 
-    List<NotificationResponse> getMyNotifications();
+    Page<NotificationResponse> getMyNotifications(Pageable pageable);
 
     long countMyUnread();
 

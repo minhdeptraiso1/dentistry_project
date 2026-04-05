@@ -2,6 +2,7 @@ package com.project.base_v1.controller;
 
 import com.project.base_v1.dto.request.appointment.AssignDoctorRequest;
 import com.project.base_v1.dto.request.appointment.CreateAppointmentRequest;
+import com.project.base_v1.dto.request.appointment.CreateFollowUpAppointmentRequest;
 import com.project.base_v1.dto.response.appointment.AppointmentResponse;
 import com.project.base_v1.dto.response.core.ApiResponseSever;
 import com.project.base_v1.enums.WorkShift;
@@ -125,6 +126,28 @@ public class AppointmentController {
             @Valid @RequestBody AssignDoctorRequest request
     ) {
         return ApiResponseSever.ok(appointmentService.assignDoctor(id, request));
+    }
+
+    @Operation(
+            summary = "Create follow-up appointment",
+            description = """
+                        Tạo lịch hẹn tiếp theo từ một lịch hẹn hiện tại.
+                        <br/>Ví dụ: đợt 1 -> đợt 2 -> đợt 3.
+                        <br/><b>Roles:</b> ADMIN, CASHIER, DOCTOR
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Created"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "404", description = "Appointment not found")
+    })
+    @PreAuthorize("hasAnyRole('ADMIN','CASHIER','DOCTOR')")
+    @PostMapping("/{id}/follow-up")
+    public ApiResponseSever<AppointmentResponse> createFollowUp(
+            @PathVariable UUID id,
+            @Valid @RequestBody CreateFollowUpAppointmentRequest request
+    ) {
+        return ApiResponseSever.ok(appointmentService.createFollowUp(id, request));
     }
 
     @Operation(
