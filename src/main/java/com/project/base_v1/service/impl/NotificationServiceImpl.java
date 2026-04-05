@@ -1,5 +1,13 @@
 package com.project.base_v1.service.impl;
 
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.project.base_v1.dto.response.notification.NotificationResponse;
 import com.project.base_v1.entity.Notification;
 import com.project.base_v1.exception.BusinessException;
@@ -8,13 +16,8 @@ import com.project.base_v1.mapper.NotificationMapper;
 import com.project.base_v1.repository.NotificationRepository;
 import com.project.base_v1.security.CurrentUser;
 import com.project.base_v1.service.NotificationService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +29,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<NotificationResponse> getMyNotifications() {
+    public Page<NotificationResponse> getMyNotifications(Pageable pageable) {
 
         UUID userId = CurrentUser.userId();
 
@@ -34,10 +37,9 @@ public class NotificationServiceImpl implements NotificationService {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
 
-        return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId)
-                .stream()
-                .map(notificationMapper::toResponse)
-                .toList();
+        return notificationRepository
+                .findByUserId(userId, pageable)
+                .map(notificationMapper::toResponse);
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.project.base_v1.service;
 
 import com.project.base_v1.dto.request.appointment.AssignDoctorRequest;
 import com.project.base_v1.dto.request.appointment.CreateAppointmentRequest;
+import com.project.base_v1.dto.request.appointment.CreateFollowUpAppointmentRequest;
 import com.project.base_v1.dto.response.appointment.AppointmentResponse;
 import com.project.base_v1.enums.WorkShift;
 import org.springframework.data.domain.Page;
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public interface AppointmentService {
+
     AppointmentResponse create(CreateAppointmentRequest request);
 
     AppointmentResponse getById(UUID id);
@@ -30,4 +32,6 @@ public interface AppointmentService {
     AppointmentResponse getMyAppointmentDetail(UUID id);
 
     AppointmentResponse createMyAppointment(CreateAppointmentRequest request);
+
+    AppointmentResponse createFollowUp(UUID appointmentId, CreateFollowUpAppointmentRequest request);
 }

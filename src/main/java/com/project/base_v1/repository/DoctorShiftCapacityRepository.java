@@ -1,6 +1,7 @@
 package com.project.base_v1.repository;
 
 import com.project.base_v1.entity.DoctorShiftCapacity;
+import com.project.base_v1.entity.User;
 import com.project.base_v1.enums.WorkShift;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -16,4 +17,6 @@ public interface DoctorShiftCapacityRepository extends JpaRepository<DoctorShift
 
     @Query("SELECT dsc FROM DoctorShiftCapacity dsc WHERE dsc.workDate = :workDate AND dsc.shift = :shift")
     List<DoctorShiftCapacity> findByWorkDateAndShift(@Param("workDate") LocalDate workDate, @Param("shift") WorkShift shift);
+
+    boolean existsByDoctorAndWorkDateAndShift(User doctor, LocalDate workDate, WorkShift shift);
 }

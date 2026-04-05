@@ -1,7 +1,6 @@
 package com.project.base_v1.entity;
 
-import com.project.base_v1.enums.AppointmentPriority;
-import com.project.base_v1.enums.AppointmentStatus;
+import com.project.base_v1.enums.ScheduleRequestStatus;
 import com.project.base_v1.enums.WorkShift;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,7 +24,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
-@Table(name = "appointments")
+@Table(name = "doctor_schedule_requests")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -33,46 +32,26 @@ import java.util.UUID;
 @Builder
 @Where(clause = "deleted_at IS NULL")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Appointment extends BaseAuditEntity {
+public class DoctorScheduleRequest extends BaseAuditEntity {
 
     @Id
     UUID id;
 
-    @Column(name = "appointment_code", nullable = false, unique = true)
-    String appointmentCode;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "patient_id", nullable = false)
-    Patient patient;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "doctor_id")
+    @JoinColumn(name = "doctor_id", nullable = false)
     User doctor;
-
-    @Column(name = "parent_id")
-    UUID parentId;
-
-    @Column(name = "sequence_no", nullable = false)
-    Integer sequenceNo;
 
     @Column(name = "work_date", nullable = false)
     LocalDate workDate;
-
-    @Column(name = "actual_date")
-    LocalDate actualDate;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     WorkShift shift;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    AppointmentStatus status;
+    @Column(name = "max_patients", nullable = false)
+    Integer maxPatients;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    AppointmentPriority priority;
-
-    @Column(columnDefinition = "TEXT")
-    String note;
+    ScheduleRequestStatus status;
 }
