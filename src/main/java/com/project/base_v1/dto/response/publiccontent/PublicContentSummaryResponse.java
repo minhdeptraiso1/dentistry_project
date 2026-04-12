@@ -1,0 +1,21 @@
+package com.project.base_v1.dto.response.publiccontent;
+
+import com.project.base_v1.enums.PublicContentType;
+
+import java.util.UUID;
+
+public record PublicContentSummaryResponse(
+        UUID id,
+        UUID refId,
+        PublicContentType refType,
+        String slug,
+        String title,
+        String subtitle,
+        String description,
+        String imageUrl,
+        String thumbnailUrl,
+        Boolean active,
+        Boolean featured,
+        Integer sortOrder
+) {
+}

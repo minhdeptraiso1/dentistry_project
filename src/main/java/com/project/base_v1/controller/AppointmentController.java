@@ -1,21 +1,8 @@
 package com.project.base_v1.controller;
 
-import com.project.base_v1.dto.request.appointment.AssignDoctorRequest;
-import com.project.base_v1.dto.request.appointment.CreateAppointmentRequest;
-import com.project.base_v1.dto.request.appointment.CreateFollowUpAppointmentRequest;
-import com.project.base_v1.dto.response.appointment.AppointmentResponse;
-import com.project.base_v1.dto.response.core.ApiResponseSever;
-import com.project.base_v1.enums.WorkShift;
-import com.project.base_v1.service.AppointmentService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
+import java.time.LocalDate;
+import java.util.UUID;
+
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,8 +18,23 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
-import java.util.UUID;
+import com.project.base_v1.dto.request.appointment.AssignDoctorRequest;
+import com.project.base_v1.dto.request.appointment.CreateAppointmentRequest;
+import com.project.base_v1.dto.request.appointment.CreateFollowUpAppointmentRequest;
+import com.project.base_v1.dto.response.appointment.AppointmentResponse;
+import com.project.base_v1.dto.response.core.ApiResponseSever;
+import com.project.base_v1.enums.WorkShift;
+import com.project.base_v1.service.AppointmentService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @Tag(name = "Appointment", description = "APIs for appointment scheduling (day + MORNING/AFTERNOON)")
 @SecurityRequirement(name = "bearerAuth")
@@ -151,23 +153,19 @@ public class AppointmentController {
     }
 
     @Operation(
-            summary = "Cancel appointment",
-            description = "<b>Roles:</b> ADMIN, CASHIER"
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Cancelled"),
-            @ApiResponse(responseCode = "400", description = "Invalid status"),
-            @ApiResponse(responseCode = "404", description = "Not found")
-    })
-    @PreAuthorize("hasAnyRole('ADMIN','CASHIER')")
-    @PostMapping("/{id}/cancel")
-    public ApiResponseSever<Void> cancel(
-            @PathVariable UUID id,
-            @RequestParam(required = false) String note
-    ) {
-        appointmentService.cancel(id, note);
+        summary = "Cancel appointment",
+        description = "Hủy 1 lịch hoặc toàn bộ chuỗi follow-up"
+        )
+        @PreAuthorize("hasAnyRole('ADMIN','CASHIER')")
+        @PostMapping("/{id}/cancel")
+        public ApiResponseSever<Void> cancel(
+                @PathVariable UUID id,
+                @RequestParam(required = false) String note,
+                @RequestParam(defaultValue = "false") boolean cancelAll
+        ) {
+        appointmentService.cancel(id, note, cancelAll);
         return ApiResponseSever.ok(null);
-    }
+        }
 
     @Operation(
             summary = "Doctor start appointment",
@@ -237,4 +235,21 @@ public class AppointmentController {
     ) {
         return ApiResponseSever.ok(appointmentService.createMyAppointment(request));
     }
+
+    @Operation(
+            summary = "Reschedule appointment",
+            description = "Dời lịch hẹn sang ngày mới và tự dời các đợt sau"
+    )
+    @PreAuthorize("hasAnyRole('ADMIN','CASHIER','DOCTOR')")
+    @PostMapping("/{id}/reschedule")
+    public ApiResponseSever<AppointmentResponse> reschedule(
+            @PathVariable UUID id,
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate newDate
+    ) {
+        return ApiResponseSever.ok(appointmentService.reschedule(id, newDate));
+    }
+
+   
 }
