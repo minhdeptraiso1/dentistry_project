@@ -233,7 +233,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional
-    public void cancel(UUID appointmentId, String note) {
+    public void cancel(UUID appointmentId, String note, boolean cancelAll) {
 
         Appointment appt = appointmentRepo.findById(appointmentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.APPOINTMENT_NOT_FOUND));
@@ -243,11 +243,16 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
         appt.setStatus(AppointmentStatus.CANCELLED);
+
         if (note != null) {
             appt.setNote(note);
         }
 
         appointmentRepo.save(appt);
+
+        if (cancelAll) {
+            cancelChildren(appt.getId());
+        }
     }
 
     private void checkCapacityOrThrow(UUID doctorId, LocalDate date, WorkShift shift) {
@@ -436,5 +441,46 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .build();
 
         return mapper.toResponse(appointmentRepo.save(appt));
+    }
+
+    @Override
+    @Transactional
+    public AppointmentResponse reschedule(UUID appointmentId, LocalDate newDate) {
+
+        Appointment appt = appointmentRepo.findById(appointmentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.APPOINTMENT_NOT_FOUND));
+
+        if (appt.getStatus() == AppointmentStatus.DONE) {
+            throw new BusinessException(ErrorCode.INVALID_APPOINTMENT_STATUS);
+        }
+
+        LocalDate oldDate = appt.getWorkDate();
+
+        long delayDays = ChronoUnit.DAYS.between(oldDate, newDate);
+
+        appt.setWorkDate(newDate);
+
+        Appointment saved = appointmentRepo.save(appt);
+
+        if (delayDays != 0) {
+            shiftChildAppointments(appt.getId(), delayDays);
+        }
+
+        return mapper.toResponse(saved);
+    }
+
+
+    private void cancelChildren(UUID parentId) {
+
+        List<Appointment> children =
+                appointmentRepo.findByParentIdOrderBySequenceNoAsc(parentId);
+
+        for (Appointment child : children) {
+
+            child.setStatus(AppointmentStatus.CANCELLED);
+            appointmentRepo.save(child);
+
+            cancelChildren(child.getId());
+        }
     }
 }

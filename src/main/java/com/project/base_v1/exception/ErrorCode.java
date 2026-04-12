@@ -16,6 +16,7 @@ public enum ErrorCode {
     TOKEN_REVOKED(102003, HttpStatus.UNAUTHORIZED, "Token revoked"),
     ACCESS_DENIED(102004, HttpStatus.FORBIDDEN, "Access denied"),
     TOKEN_INVALID(102005, HttpStatus.UNAUTHORIZED, "Invalid token"),
+    PATIENT_FULL_NAME_REQUIRED(102006, HttpStatus.BAD_REQUEST, "Patient full name is required for registration"),
 
     // ===================== USER (103xxx) =====================
     USER_NOT_FOUND(103001, HttpStatus.NOT_FOUND, "User not found"),
@@ -98,6 +99,12 @@ public enum ErrorCode {
 
     // ===================== Notification (112xxx) =====================
     NOTIFICATION_NOT_FOUND(112001, HttpStatus.NOT_FOUND, "Notification not found"),
+    //===================== Public content (113xxx) =====================
+    PUBLIC_CONTENT_NOT_FOUND(113001, HttpStatus.NOT_FOUND, "Public content not found"),
+    PUBLIC_CONTENT_INVALID_TYPE(113002, HttpStatus.BAD_REQUEST, "Invalid public content type"),
+    PUBLIC_CONTENT_SLUG_ALREADY_EXISTS(113003, HttpStatus.BAD_REQUEST, "Public content slug already exists"),
+    PUBLIC_CONTENT_REF_ALREADY_EXISTS(113004, HttpStatus.BAD_REQUEST, "Public content with the same refId and refType already exists"),
+    PUBLIC_CONTENT_INVALID_DOCTOR_REF(113005, HttpStatus.BAD_REQUEST, "Doctor refId must refer to an existing doctor"),
     // ===================== SYSTEM (500xxx) =====================
     SYSTEM_ERROR(500001, HttpStatus.INTERNAL_SERVER_ERROR, "System error");
 

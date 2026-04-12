@@ -22,4 +22,6 @@ public interface PatientRepository
     boolean existsByPhoneAndDeletedAtIsNull(String phone);
 
     Optional<Patient> findByPatientCode(String patientCode);
+
+    Optional<Patient> findByPhoneAndDeletedAtIsNull(String phone);
 }

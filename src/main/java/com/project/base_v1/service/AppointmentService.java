@@ -21,7 +21,7 @@ public interface AppointmentService {
 
     AppointmentResponse assignDoctor(UUID appointmentId, AssignDoctorRequest request);
 
-    void cancel(UUID appointmentId, String note);
+    void cancel(UUID appointmentId, String note, boolean cancelAll);
 
     AppointmentResponse start(UUID appointmentId);
 
@@ -34,4 +34,6 @@ public interface AppointmentService {
     AppointmentResponse createMyAppointment(CreateAppointmentRequest request);
 
     AppointmentResponse createFollowUp(UUID appointmentId, CreateFollowUpAppointmentRequest request);
+
+    AppointmentResponse reschedule(UUID appointmentId, LocalDate newDate);
 }

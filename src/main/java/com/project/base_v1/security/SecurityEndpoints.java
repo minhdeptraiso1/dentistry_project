@@ -8,6 +8,8 @@
                 "/auth/**",
                 "/swagger-ui/**",
                 "/v3/api-docs/**",
+                "/public-contents",
+                "/public-contents/**",
                 "/ws/**"
 
         };
