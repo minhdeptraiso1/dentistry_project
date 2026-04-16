@@ -21,6 +21,30 @@ spring:
       host: localhost
       port: 6379
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+    default-encoding: UTF-8
+
+    thymeleaf:
+      prefix: classpath:/templates/
+      suffix: .html
+      mode: HTML
+      encoding: UTF-8
+      cache: false
+
+  app:
+    mail:
+      from: "Nha Khoa Việt Smile <${MAIL_USERNAME}>"
+
 jwt:
   access-token-expiration: 900
   refresh-token-expiration: 7d
@@ -29,3 +53,14 @@ jwt:
 springdoc:
   swagger-ui:
     path: /swagger
+
+payment:
+  vn-pay:
+    vnpUrl: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+    tmnCode: ${VNP_TMN_CODE}
+    secretKey: ${VNP_SECRET_KEY}
+    returnUrl: http://localhost:8080/api/payments/vnpay/return
+    ipnUrl: http://localhost:8080/api/payments/vnpay/ipn
+    version: 2.1.0
+    command: pay
+    orderType: other
