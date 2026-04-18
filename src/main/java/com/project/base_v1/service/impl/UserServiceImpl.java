@@ -1,12 +1,24 @@
 package com.project.base_v1.service.impl;
 
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.project.base_v1.dto.request.user.ChangePasswordRequest;
 import com.project.base_v1.dto.request.user.CreateUserRequest;
 import com.project.base_v1.dto.request.user.UpdateUserRequest;
 import com.project.base_v1.dto.request.user.UserSearchRequest;
+import com.project.base_v1.dto.response.patient.ActiveDoctorResponse;
 import com.project.base_v1.dto.response.user.UserDetailResponse;
 import com.project.base_v1.dto.response.user.UserResponse;
 import com.project.base_v1.entity.User;
+import com.project.base_v1.enums.UserRole;
 import com.project.base_v1.exception.BusinessException;
 import com.project.base_v1.exception.ErrorCode;
 import com.project.base_v1.mapper.UserMapper;
@@ -14,18 +26,11 @@ import com.project.base_v1.repository.UserRepository;
 import com.project.base_v1.repository.spec.UserSpecification;
 import com.project.base_v1.security.CurrentUser;
 import com.project.base_v1.service.UserService;
+
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.time.Instant;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -153,6 +158,18 @@ public class UserServiceImpl implements UserService {
         }
 
         user.setPassword(passwordEncoder.encode(request.newPassword()));
+    }
+
+    @Override
+    public List<ActiveDoctorResponse> getActiveDoctorsForPatient() {
+        return userRepository.findByRoleAndEnabledTrueOrderByNameAsc(UserRole.DOCTOR)
+                .stream()
+                .map(user -> new ActiveDoctorResponse(
+                        user.getId(),
+                        user.getName(),
+                        user.getImg()
+                ))
+                .toList();
     }
 }
 
