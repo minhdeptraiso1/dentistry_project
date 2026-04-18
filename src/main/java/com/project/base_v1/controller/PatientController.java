@@ -1,21 +1,8 @@
 package com.project.base_v1.controller;
 
-import com.project.base_v1.dto.request.patient.CreatePatientRequest;
-import com.project.base_v1.dto.request.patient.PatientSearchRequest;
-import com.project.base_v1.dto.request.patient.UpdatePatientRequest;
-import com.project.base_v1.dto.response.core.ApiResponseSever;
-import com.project.base_v1.dto.response.patient.PatientResponse;
-import com.project.base_v1.service.PatientService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
+import java.util.List;
+import java.util.UUID;
+
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,7 +18,25 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
+import com.project.base_v1.dto.request.patient.CreatePatientRequest;
+import com.project.base_v1.dto.request.patient.PatientSearchRequest;
+import com.project.base_v1.dto.request.patient.UpdatePatientRequest;
+import com.project.base_v1.dto.response.core.ApiResponseSever;
+import com.project.base_v1.dto.response.patient.ActiveDoctorResponse;
+import com.project.base_v1.dto.response.patient.PatientResponse;
+import com.project.base_v1.service.PatientService;
+import com.project.base_v1.service.UserService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @Tag(
         name = "Patient",
@@ -45,6 +50,7 @@ import java.util.UUID;
 public class PatientController {
 
     PatientService patientService;
+        UserService userService;
 
     // ===================== CREATE =====================
     @Operation(
@@ -218,4 +224,10 @@ public class PatientController {
     public PatientResponse getMyProfile() {
         return patientService.getMyProfile();
     }
+
+        @PreAuthorize("hasRole('PATIENT')")
+        @GetMapping("/me/active-doctors")
+        public ApiResponseSever<List<ActiveDoctorResponse>> getActiveDoctorsForPatient() {
+                return ApiResponseSever.ok(userService.getActiveDoctorsForPatient());
+        }
 }

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Thanh toán thành công</title>
+    <title>Thông báo phân công bác sĩ</title>
   </head>
   <body
     style="
@@ -45,7 +45,7 @@
                 "
               >
                 <h1 style="margin: 0; font-size: 22px">
-                  Xác nhận thanh toán thành công
+                  Thông báo phân công bác sĩ
                 </h1>
                 <p style="margin: 8px 0 0; font-size: 14px; opacity: 0.95">
                   Nha Khoa Việt Smile
@@ -55,10 +55,11 @@
             <tr>
               <td style="padding: 22px 24px">
                 <p style="margin: 0 0 12px">
-                  Xin chào <b th:text="${patientName}">Khách hàng</b>,
+                  Xin chào <b th:text="${patientName}">Bệnh nhân</b>,
                 </p>
                 <p style="margin: 0 0 16px; line-height: 1.6">
-                  Hệ thống đã ghi nhận giao dịch thanh toán của bạn.
+                  Lịch khám của bạn đã được phân công bác sĩ. Thông tin chi tiết
+                  như sau:
                 </p>
 
                 <table
@@ -70,32 +71,34 @@
                 >
                   <tr>
                     <td style="padding: 8px 0; color: #64748b; width: 42%">
-                      Mã hóa đơn
+                      Mã lịch hẹn
                     </td>
                     <td style="padding: 8px 0">
-                      <b th:text="${invoiceCode}">HD001</b>
+                      <b th:text="${appointmentCode}">APP001</b>
                     </td>
                   </tr>
                   <tr>
-                    <td style="padding: 8px 0; color: #64748b">
-                      Số tiền đã thanh toán
-                    </td>
+                    <td style="padding: 8px 0; color: #64748b">Ngày khám</td>
                     <td style="padding: 8px 0">
-                      <b th:text="${amount}">0</b> VND
+                      <b th:text="${workDate}">--</b>
                     </td>
                   </tr>
                   <tr>
+                    <td style="padding: 8px 0; color: #64748b">Ca khám</td>
+                    <td style="padding: 8px 0"><b th:text="${shift}">--</b></td>
+                  </tr>
+                  <tr>
                     <td style="padding: 8px 0; color: #64748b">
-                      Thời gian giao dịch
+                      Bác sĩ phụ trách
                     </td>
                     <td style="padding: 8px 0">
-                      <b th:text="${paidAt}">--</b>
+                      <b th:text="${doctorName}">--</b>
                     </td>
                   </tr>
                 </table>
 
                 <p style="margin: 0; line-height: 1.6">
-                  Cảm ơn bạn đã tin tưởng sử dụng dịch vụ của phòng khám.
+                  Vui lòng đến đúng giờ để được hỗ trợ tốt nhất.
                 </p>
               </td>
             </tr>

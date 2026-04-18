@@ -1,28 +1,5 @@
 package com.project.base_v1.service.impl;
 
-import com.project.base_v1.config.VnPayConfig;
-import com.project.base_v1.dto.request.payment.CreateVnPayPaymentRequest;
-import com.project.base_v1.dto.response.payment.VnPayCreatePaymentResponse;
-import com.project.base_v1.dto.response.payment.VnPayReturnResponse;
-import com.project.base_v1.entity.Invoice;
-import com.project.base_v1.entity.Payment;
-import com.project.base_v1.entity.User;
-import com.project.base_v1.enums.InvoiceStatus;
-import com.project.base_v1.enums.PaymentMethod;
-import com.project.base_v1.exception.BusinessException;
-import com.project.base_v1.exception.ErrorCode;
-import com.project.base_v1.repository.InvoiceRepository;
-import com.project.base_v1.repository.PaymentRepository;
-import com.project.base_v1.repository.UserRepository;
-import com.project.base_v1.service.EmailService;
-import com.project.base_v1.service.NotificationService;
-import com.project.base_v1.service.VnPayService;
-import com.project.base_v1.util.VnPayUtil;
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -36,9 +13,31 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.TimeZone;
 import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.project.base_v1.config.VnPayConfig;
+import com.project.base_v1.dto.request.payment.CreateVnPayPaymentRequest;
+import com.project.base_v1.dto.response.payment.VnPayCreatePaymentResponse;
+import com.project.base_v1.dto.response.payment.VnPayReturnResponse;
+import com.project.base_v1.entity.Invoice;
+import com.project.base_v1.entity.Payment;
+import com.project.base_v1.enums.InvoiceStatus;
+import com.project.base_v1.enums.PaymentMethod;
+import com.project.base_v1.exception.BusinessException;
+import com.project.base_v1.exception.ErrorCode;
+import com.project.base_v1.repository.InvoiceRepository;
+import com.project.base_v1.repository.PaymentRepository;
+import com.project.base_v1.repository.UserRepository;
+import com.project.base_v1.service.NotificationService;
+import com.project.base_v1.service.VnPayService;
+import com.project.base_v1.util.VnPayUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -49,7 +48,6 @@ public class VnPayServiceImpl implements VnPayService {
     private final PaymentRepository paymentRepo;
     private final UserRepository userRepo;
     private final NotificationService notificationService;
-    private final EmailService emailService;
 
     @Override
     public VnPayCreatePaymentResponse createPayment(HttpServletRequest req, CreateVnPayPaymentRequest dto) {
@@ -69,7 +67,7 @@ public class VnPayServiceImpl implements VnPayService {
 
         String bankCode = dto.bankCode();
         String locale = (dto.language() == null || dto.language().isBlank()) ? "vn" : dto.language();
-        String txnRef = invoice.getId().toString().replace("-", "");
+        String txnRef = invoice.getId().toString();
         String ipAddr = VnPayUtil.getIpAddress(req);
 
         Map<String, String> params = new HashMap<>();
@@ -221,29 +219,7 @@ public class VnPayServiceImpl implements VnPayService {
         invoice.setPaidAt(Instant.now());
         invoiceRepo.save(invoice);
 
-        Optional<User> patientUserOpt = userRepo.findByPatient_Id(invoice.getPatient().getId());
-        patientUserOpt.ifPresent(user -> notificationService.pushToUser(
-                user.getId(),
-                "Thanh toán thành công",
-                "Hóa đơn " + invoice.getInvoiceCode() + " đã được thanh toán qua VNPAY."
-        ));
-
-        patientUserOpt.ifPresent(user -> {
-            if (user.getEmail() != null && !user.getEmail().isBlank()) {
-                Map<String, Object> model = new HashMap<>();
-                model.put("patientName", invoice.getPatient().getFullName());
-                model.put("invoiceCode", invoice.getInvoiceCode());
-                model.put("amount", remaining);
-                model.put("paidAt", Instant.now().toString());
-
-                emailService.sendTemplate(
-                        user.getEmail(),
-                        "Xác nhận thanh toán hóa đơn",
-                        "payment-success",
-                        model
-                );
-            }
-        });
+       
 
         return new VnPayReturnResponse(
                 true,

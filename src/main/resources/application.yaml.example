@@ -59,7 +59,7 @@ payment:
     vnpUrl: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
     tmnCode: ${VNP_TMN_CODE}
     secretKey: ${VNP_SECRET_KEY}
-    returnUrl: http://localhost:8080/api/payments/vnpay/return
+    returnUrl: http://localhost:3000/payment/vnpay-return
     ipnUrl: http://localhost:8080/api/payments/vnpay/ipn
     version: 2.1.0
     command: pay
