@@ -21,6 +21,7 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.Where;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -75,4 +76,16 @@ public class Appointment extends BaseAuditEntity {
 
     @Column(columnDefinition = "TEXT")
     String note;
+
+    @Column(name = "reminder_today_sent", nullable = false)
+    boolean reminderTodaySent;
+
+    @Column(name = "reminder_today_sent_at")
+    Instant reminderTodaySentAt;
+
+    @Column(name = "reminder_tomorrow_sent", nullable = false)
+    boolean reminderTomorrowSent;
+
+    @Column(name = "reminder_tomorrow_sent_at")
+    Instant reminderTomorrowSentAt;
 }
