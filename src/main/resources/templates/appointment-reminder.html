@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Nhắc lịch hẹn khám</title>
+</head>
+<body
+        style="
+      margin: 0;
+      padding: 0;
+      background: #f8fafc;
+      font-family: Arial, sans-serif;
+      color: #0f172a;
+    "
+>
+<table
+        role="presentation"
+        width="100%"
+        cellpadding="0"
+        cellspacing="0"
+        style="padding: 24px 12px"
+>
+    <tr>
+        <td align="center">
+            <table
+                    role="presentation"
+                    width="100%"
+                    cellpadding="0"
+                    cellspacing="0"
+                    style="
+              max-width: 620px;
+              background: #ffffff;
+              border: 1px solid #e2e8f0;
+              border-radius: 14px;
+              overflow: hidden;
+            "
+            >
+                <tr>
+                    <td
+                            style="
+                  padding: 22px 24px;
+                  background: linear-gradient(135deg, #14b8a6 0%, #0284c7 100%);
+                  color: #ffffff;
+                "
+                    >
+                        <h1 style="margin: 0; font-size: 22px">Nhắc lịch hẹn khám</h1>
+                        <p style="margin: 8px 0 0; font-size: 14px; opacity: 0.95">
+                            Nha Khoa Việt Smile
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 22px 24px">
+                        <p style="margin: 0 0 12px">
+                            Xin chào <b th:text="${patientName}">Bệnh nhân</b>,
+                        </p>
+
+                        <p style="margin: 0 0 16px; line-height: 1.6">
+                            Đây là email nhắc lịch hẹn khám
+                            <b th:text="${reminderLabel}">hôm nay</b> của bạn tại
+                            <b>Nha Khoa Việt Smile</b>.
+                        </p>
+
+                        <table
+                                role="presentation"
+                                width="100%"
+                                cellpadding="0"
+                                cellspacing="0"
+                                style="border-collapse: collapse; margin: 0 0 16px"
+                        >
+                            <tr>
+                                <td style="padding: 8px 0; color: #64748b; width: 42%">
+                                    Mã lịch hẹn
+                                </td>
+                                <td style="padding: 8px 0">
+                                    <b th:text="${appointmentCode}">APP001</b>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #64748b">Ngày khám</td>
+                                <td style="padding: 8px 0">
+                                    <b th:text="${workDate}">--</b>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #64748b">Ca khám</td>
+                                <td style="padding: 8px 0"><b th:text="${shift}">--</b></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #64748b">Bác sĩ</td>
+                                <td style="padding: 8px 0">
+                                    <b th:text="${doctorName}">--</b>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <p
+                                style="
+                    margin: 0 0 12px;
+                    line-height: 1.6;
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 10px;
+                    padding: 10px 12px;
+                    color: #334155;
+                  "
+                        >
+                            Vui lòng đến đúng giờ. Nếu cần đổi lịch, vui lòng liên hệ
+                            phòng khám sớm để được hỗ trợ.
+                        </p>
+
+                        <p style="margin: 0; color: #64748b; font-size: 13px">
+                            Email này được gửi tự động từ hệ thống đặt lịch.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

@@ -1,6 +1,7 @@
 package com.project.base_v1.repository;
 
 import com.project.base_v1.entity.Appointment;
+import com.project.base_v1.enums.AppointmentStatus;
 import com.project.base_v1.enums.WorkShift;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -50,4 +52,13 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID>,
 
     List<Appointment> findByParentIdOrderBySequenceNoAsc(UUID parentId);
 
+    List<Appointment> findByWorkDateAndReminderTodaySentFalseAndStatusIn(
+            LocalDate workDate,
+            Collection<AppointmentStatus> statuses
+    );
+
+    List<Appointment> findByWorkDateAndReminderTomorrowSentFalseAndStatusIn(
+            LocalDate workDate,
+            Collection<AppointmentStatus> statuses
+    );
 }
