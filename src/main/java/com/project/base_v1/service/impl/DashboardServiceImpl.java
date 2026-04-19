@@ -98,11 +98,26 @@ public class DashboardServiceImpl implements DashboardService {
     // ===== helpers =====
     private List<TimePointAmountResponse> mapDateAmount(List<Object[]> rows) {
         List<TimePointAmountResponse> res = new ArrayList<>();
+
         for (Object[] r : rows) {
             String date = String.valueOf(r[0]);
-            BigDecimal amount = (r[1] == null) ? BigDecimal.ZERO : (BigDecimal) r[1];
+
+            BigDecimal amount = BigDecimal.ZERO;
+            Object v = r[1];
+
+            if (v != null) {
+                if (v instanceof BigDecimal bd) {
+                    amount = bd;
+                } else if (v instanceof Number n) {
+                    amount = BigDecimal.valueOf(n.doubleValue());
+                } else {
+                    amount = new BigDecimal(v.toString());
+                }
+            }
+
             res.add(new TimePointAmountResponse(date, amount));
         }
+
         return res;
     }
 

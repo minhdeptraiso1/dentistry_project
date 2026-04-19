@@ -5,8 +5,8 @@ server:
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/nha_khoa_db
-    username: postgres
-    password: 123456
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
   jpa:
     hibernate:
@@ -34,21 +34,31 @@ spring:
             enable: true
     default-encoding: UTF-8
 
-    thymeleaf:
-      prefix: classpath:/templates/
-      suffix: .html
-      mode: HTML
-      encoding: UTF-8
-      cache: false
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    cache: false
 
-  app:
-    mail:
-      from: "Nha Khoa Việt Smile <${MAIL_USERNAME}>"
+  ai:
+    model:
+      chat: google-genai
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY}
+        chat:
+          options:
+            model: gemini-2.0-flash
+
+app:
+  mail:
+    from: "Nha Khoa Việt Smile <${MAIL_USERNAME}>"
 
 jwt:
   access-token-expiration: 900
   refresh-token-expiration: 7d
-  secret: 9f3a8d7c6e5b4a3928f7e6d5c4b3a291
+  secret: ${JWT_SECRET}
 
 springdoc:
   swagger-ui:
