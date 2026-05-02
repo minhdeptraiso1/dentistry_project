@@ -24,6 +24,11 @@ public enum ErrorCode {
     EMAIL_ALREADY_EXISTS(103003, HttpStatus.BAD_REQUEST, "Email already exists"),
     INVALID_PASSWORD(103004, HttpStatus.BAD_REQUEST, "Invalid password"),
     PATIENT_ALREADY_HAS_ACCOUNT(103005, HttpStatus.BAD_REQUEST, "Patient already has an account"),
+    USER_EMAIL_NOT_FOUND(103006, HttpStatus.BAD_REQUEST, "User email not found"),
+    INVALID_OTP(102007, HttpStatus.BAD_REQUEST, "Invalid OTP"),
+    OTP_EXPIRED(102008, HttpStatus.BAD_REQUEST, "OTP expired"),
+    OTP_MAX_ATTEMPTS_EXCEEDED(102009, HttpStatus.BAD_REQUEST, "OTP max attempts exceeded"),
+    TOO_MANY_OTP_REQUESTS(102010, HttpStatus.TOO_MANY_REQUESTS, "Too many OTP requests"),
 
     // ===================== PATIENT (104xxx) =====================
     PATIENT_NOT_FOUND(104001, HttpStatus.NOT_FOUND, "Patient not found"),

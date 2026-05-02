@@ -88,4 +88,8 @@ public class Appointment extends BaseAuditEntity {
 
     @Column(name = "reminder_tomorrow_sent_at")
     Instant reminderTomorrowSentAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "treatment_plan_id")
+    TreatmentPlan treatmentPlan;
 }
