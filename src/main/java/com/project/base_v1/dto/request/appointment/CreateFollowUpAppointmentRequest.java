@@ -9,6 +9,8 @@ import java.util.UUID;
 
 public record CreateFollowUpAppointmentRequest(
 
+        UUID treatmentPlanId,
+
         @NotNull
         @FutureOrPresent
         LocalDate workDate,

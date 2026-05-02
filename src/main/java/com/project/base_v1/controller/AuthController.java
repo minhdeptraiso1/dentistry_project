@@ -1,10 +1,13 @@
 package com.project.base_v1.controller;
 
+import com.project.base_v1.dto.request.auth.ForgotPasswordRequestOtpRequest;
+import com.project.base_v1.dto.request.auth.ForgotPasswordResetWithOtpRequest;
 import com.project.base_v1.dto.request.auth.LoginRequest;
 import com.project.base_v1.dto.request.auth.RegisterPatientRequest;
 import com.project.base_v1.dto.response.auth.AuthResponse;
 import com.project.base_v1.dto.response.core.ApiResponseSever;
 import com.project.base_v1.service.AuthService;
+import com.project.base_v1.service.PasswordService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -33,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     AuthService authService;
+    PasswordService passwordService;
 
     // ===================== LOGIN =====================
     @Operation(
@@ -131,5 +135,21 @@ public class AuthController {
     @PostMapping("/register-patient")
     public void registerPatient(@RequestBody RegisterPatientRequest request) {
         authService.registerPatient(request);
+    }
+
+    @PostMapping("/forgot-password/request-otp")
+    public ApiResponseSever<String> requestForgotPasswordOtp(
+            @RequestBody @Valid ForgotPasswordRequestOtpRequest request
+    ) {
+        passwordService.requestForgotPasswordOtp(request);
+        return ApiResponseSever.ok("Nếu tài khoản tồn tại, mã OTP đã được gửi về email.");
+    }
+
+    @PostMapping("/forgot-password/reset-with-otp")
+    public ApiResponseSever<String> resetPasswordWithOtp(
+            @RequestBody @Valid ForgotPasswordResetWithOtpRequest request
+    ) {
+        passwordService.resetPasswordWithOtp(request);
+        return ApiResponseSever.ok("Đặt lại mật khẩu thành công.");
     }
 }

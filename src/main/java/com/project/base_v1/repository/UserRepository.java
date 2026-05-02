@@ -25,4 +25,8 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
     List<User> findByRole(UserRole role);
 
     List<User> findByRoleAndEnabledTrueOrderByNameAsc(UserRole role);
+
+    Optional<User> findByEmail(String email);
+
+    Optional<User> findByEmailOrUsername(String email, String username);
 }

@@ -1,12 +1,10 @@
 package com.project.base_v1.controller;
 
-import com.project.base_v1.dto.request.user.ChangePasswordRequest;
-import com.project.base_v1.dto.request.user.CreateUserRequest;
-import com.project.base_v1.dto.request.user.UpdateUserRequest;
-import com.project.base_v1.dto.request.user.UserSearchRequest;
+import com.project.base_v1.dto.request.user.*;
 import com.project.base_v1.dto.response.core.ApiResponseSever;
 import com.project.base_v1.dto.response.user.UserDetailResponse;
 import com.project.base_v1.dto.response.user.UserResponse;
+import com.project.base_v1.service.PasswordService;
 import com.project.base_v1.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -47,6 +45,7 @@ import java.util.UUID;
 public class UserController {
 
     UserService userService;
+    PasswordService passwordService;
 
     // ===================== ME =====================
     @Operation(
@@ -177,6 +176,16 @@ public class UserController {
     ) {
         userService.changePassword(id, request);
         return ApiResponseSever.ok(null);
+    }
+
+    @PutMapping("/{id}/admin-reset-password")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponseSever<String> adminResetPassword(
+            @PathVariable UUID id,
+            @RequestBody @Valid AdminResetPasswordRequest request
+    ) {
+        passwordService.adminResetPassword(id, request);
+        return ApiResponseSever.ok("Admin đổi mật khẩu tài khoản thành công.");
     }
 }
 

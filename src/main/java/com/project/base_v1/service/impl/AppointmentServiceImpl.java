@@ -1,25 +1,10 @@
 package com.project.base_v1.service.impl;
 
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.project.base_v1.dto.request.appointment.AssignDoctorRequest;
 import com.project.base_v1.dto.request.appointment.CreateAppointmentRequest;
 import com.project.base_v1.dto.request.appointment.CreateFollowUpAppointmentRequest;
 import com.project.base_v1.dto.response.appointment.AppointmentResponse;
-import com.project.base_v1.entity.Appointment;
-import com.project.base_v1.entity.DoctorShiftCapacity;
-import com.project.base_v1.entity.Patient;
-import com.project.base_v1.entity.User;
+import com.project.base_v1.entity.*;
 import com.project.base_v1.enums.AppointmentPriority;
 import com.project.base_v1.enums.AppointmentStatus;
 import com.project.base_v1.enums.UserRole;
@@ -27,17 +12,24 @@ import com.project.base_v1.enums.WorkShift;
 import com.project.base_v1.exception.BusinessException;
 import com.project.base_v1.exception.ErrorCode;
 import com.project.base_v1.mapper.AppointmentMapper;
-import com.project.base_v1.repository.AppointmentRepository;
-import com.project.base_v1.repository.DoctorShiftCapacityRepository;
-import com.project.base_v1.repository.PatientRepository;
-import com.project.base_v1.repository.UserRepository;
+import com.project.base_v1.repository.*;
 import com.project.base_v1.repository.spec.AppointmentSpecification;
 import com.project.base_v1.security.CurrentUser;
 import com.project.base_v1.service.AppointmentService;
 import com.project.base_v1.service.NotificationService;
 import com.project.base_v1.service.helper.AppointmentCodeGenerator;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -50,6 +42,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final AppointmentCodeGenerator codeGen;
     private final AppointmentMapper mapper;
     private final NotificationService notificationService;
+    private final TreatmentPlanRepository treatmentPlanRepo;
 
     @Override
     @Transactional
@@ -117,6 +110,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<AppointmentResponse> search(LocalDate date, UUID doctorId, String status, WorkShift shift, Pageable pageable) {
         Specification<Appointment> spec = Specification.allOf(
                 AppointmentSpecification.hasDate(date),
@@ -176,10 +170,28 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment parent = appointmentRepo.findById(appointmentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.APPOINTMENT_NOT_FOUND));
 
+        TreatmentPlan plan;
+
+        if (request.treatmentPlanId() != null) {
+            plan = treatmentPlanRepo.findById(request.treatmentPlanId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.TREATMENT_PLAN_NOT_FOUND));
+        } else {
+            plan = parent.getTreatmentPlan();
+        }
+
+        if (plan == null) {
+            throw new BusinessException(ErrorCode.TREATMENT_PLAN_NOT_FOUND);
+        }
+
+        if (!plan.getPatient().getId().equals(parent.getPatient().getId())) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST);
+        }
+
         Appointment next = Appointment.builder()
                 .id(UUID.randomUUID())
                 .appointmentCode(codeGen.nextCode())
                 .patient(parent.getPatient())
+                .treatmentPlan(plan)
                 .parentId(parent.getId())
                 .sequenceNo(parent.getSequenceNo() == null ? 2 : parent.getSequenceNo() + 1)
                 .workDate(request.workDate())
@@ -378,6 +390,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<AppointmentResponse> getMyAppointments(
             LocalDate date,
             Pageable pageable
