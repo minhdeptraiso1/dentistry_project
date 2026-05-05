@@ -35,10 +35,11 @@ public class PublicContentSpecification {
             String likeValue = "%" + keyword.trim().toLowerCase() + "%";
 
             return cb.or(
-                    cb.like(cb.lower(root.get("title")), likeValue),
-                    cb.like(cb.lower(root.get("subtitle")), likeValue),
-                    cb.like(cb.lower(root.get("description")), likeValue),
-                    cb.like(cb.lower(root.get("slug")), likeValue)
+                    cb.like(cb.lower(cb.coalesce(root.get("title"), "")), likeValue),
+                    cb.like(cb.lower(cb.coalesce(root.get("subtitle"), "")), likeValue),
+                    cb.like(cb.lower(cb.coalesce(root.get("description"), "")), likeValue),
+                    cb.like(cb.lower(cb.coalesce(root.get("content"), "")), likeValue),
+                    cb.like(cb.lower(cb.coalesce(root.get("slug"), "")), likeValue)
             );
         };
     }
