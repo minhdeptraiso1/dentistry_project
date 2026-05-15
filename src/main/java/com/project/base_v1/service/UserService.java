@@ -30,6 +30,8 @@ public interface UserService {
 
     UserDetailResponse getUserById(UUID userId);
 
+    UserDetailResponse getUserByPatientId(UUID patientId);
+
     void changePassword(UUID id, ChangePasswordRequest request);
 
     List<ActiveDoctorResponse> getActiveDoctorsForPatient();

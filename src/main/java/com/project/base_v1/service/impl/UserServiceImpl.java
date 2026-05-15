@@ -147,6 +147,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserDetailResponse getUserByPatientId(UUID patientId) {
+
+        User user = userRepository.findByPatient_Id(patientId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        return userMapper.toDetail(user);
+    }
+
+    @Override
     @Transactional
     public void changePassword(UUID id, ChangePasswordRequest request) {
 

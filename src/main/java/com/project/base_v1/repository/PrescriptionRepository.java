@@ -1,6 +1,7 @@
 package com.project.base_v1.repository;
 
 import com.project.base_v1.entity.Prescription;
+import com.project.base_v1.enums.PrescriptionStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -43,4 +44,24 @@ PrescriptionRepository extends JpaRepository<Prescription, UUID>, JpaSpecificati
             "items.medicine"
     })
     Optional<Prescription> findByIdAndPatient_Id(UUID id, UUID patientId);
+
+    @EntityGraph(attributePaths = {
+            "medicalRecord",
+            "patient",
+            "doctor",
+            "items",
+            "items.medicine"
+    })
+    @Query("""
+        SELECT p FROM Prescription p
+        WHERE p.medicalRecord.id = :medicalRecordId
+          AND p.patient.id = :patientId
+          AND p.status = :status
+        ORDER BY p.createdAt DESC
+        """)
+    List<Prescription> findByMedicalRecord_IdAndPatient_IdAndStatusOrderByCreatedAtDesc(
+            @Param("medicalRecordId") UUID medicalRecordId,
+            @Param("patientId") UUID patientId,
+            @Param("status") PrescriptionStatus status
+    );
 }

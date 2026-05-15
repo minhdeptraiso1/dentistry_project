@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -47,6 +48,8 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional
     public AppointmentResponse create(CreateAppointmentRequest request) {
+
+        validateBookingCutoff(request.workDate(), request.shift());
 
         Patient patient = patientRepo.findById(request.patientId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.PATIENT_NOT_FOUND));
@@ -166,6 +169,8 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional
     public AppointmentResponse createFollowUp(UUID appointmentId, CreateFollowUpAppointmentRequest request) {
+
+        validateBookingCutoff(request.workDate(), request.shift());
 
         Appointment parent = appointmentRepo.findById(appointmentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.APPOINTMENT_NOT_FOUND));
@@ -432,6 +437,8 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Transactional
     public AppointmentResponse createMyAppointment(CreateAppointmentRequest request) {
 
+        validateBookingCutoff(request.workDate(), request.shift());
+
         UUID patientId = CurrentUser.patientId();
 
         if (patientId == null) {
@@ -469,6 +476,8 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new BusinessException(ErrorCode.INVALID_APPOINTMENT_STATUS);
         }
 
+        validateBookingCutoff(newDate, appt.getShift());
+
         LocalDate oldDate = appt.getWorkDate();
 
         long delayDays = ChronoUnit.DAYS.between(oldDate, newDate);
@@ -496,6 +505,66 @@ public class AppointmentServiceImpl implements AppointmentService {
             appointmentRepo.save(child);
 
             cancelChildren(child.getId());
+        }
+    }
+
+    private void validateBookingCutoff(LocalDate workDate, WorkShift shift) {
+        if (workDate == null || shift == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST);
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+
+        if (workDate.isBefore(today)) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST);
+        }
+
+        if (workDate.isAfter(today)) {
+            return;
+        }
+
+        if (shift == WorkShift.MORNING && !now.isBefore(LocalTime.of(7, 0))) {
+            throw new BusinessException(ErrorCode.APPOINTMENT_BOOKING_CUTOFF_PASSED);
+        }
+
+        if (shift == WorkShift.AFTERNOON && !now.isBefore(LocalTime.of(13, 0))) {
+            throw new BusinessException(ErrorCode.APPOINTMENT_BOOKING_CUTOFF_PASSED);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void cancelMyAppointment(UUID appointmentId, String note) {
+        UUID patientId = CurrentUser.patientId();
+
+        if (patientId == null) {
+            throw new BusinessException(ErrorCode.PATIENT_NOT_FOUND);
+        }
+
+        Appointment appt = appointmentRepo.findByIdAndPatient_Id(appointmentId, patientId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.APPOINTMENT_NOT_FOUND));
+
+        if (appt.getStatus() == AppointmentStatus.DONE
+                || appt.getStatus() == AppointmentStatus.IN_PROGRESS
+                || appt.getStatus() == AppointmentStatus.CANCELLED) {
+            throw new BusinessException(ErrorCode.INVALID_APPOINTMENT_STATUS);
+        }
+
+        appt.setStatus(AppointmentStatus.CANCELLED);
+
+        if (note != null && !note.isBlank()) {
+            appt.setNote(note);
+        }
+
+        appointmentRepo.save(appt);
+
+        if (appt.getDoctor() != null) {
+            notificationService.pushToUser(
+                    appt.getDoctor().getId(),
+                    "Bệnh nhân đã hủy lịch",
+                    "Lịch khám " + appt.getAppointmentCode() + " đã được bệnh nhân hủy."
+            );
         }
     }
 }

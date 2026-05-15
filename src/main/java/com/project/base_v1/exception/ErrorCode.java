@@ -101,6 +101,7 @@ public enum ErrorCode {
     INVALID_APPOINTMENT_STATUS(111004, HttpStatus.BAD_REQUEST, "Invalid appointment status"),
     DOCTOR_NOT_FOUND(111005, HttpStatus.NOT_FOUND, "Doctor not found"),
     DOCTOR_ROLE_REQUIRED(111006, HttpStatus.BAD_REQUEST, "Doctor role required"),
+    APPOINTMENT_BOOKING_CUTOFF_PASSED(111007, HttpStatus.BAD_REQUEST, "Booking cutoff time for this shift has passed"),
 
     // ===================== Notification (112xxx) =====================
     NOTIFICATION_NOT_FOUND(112001, HttpStatus.NOT_FOUND, "Notification not found"),

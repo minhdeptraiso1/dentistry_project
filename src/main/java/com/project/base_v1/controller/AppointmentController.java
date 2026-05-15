@@ -251,5 +251,18 @@ public class AppointmentController {
         return ApiResponseSever.ok(appointmentService.reschedule(id, newDate));
     }
 
+    @Operation(
+        summary = "Patient cancel my appointment",
+        description = "Bệnh nhân hủy lịch hẹn của chính mình"
+        )
+        @PreAuthorize("hasRole('PATIENT')")
+        @PostMapping("/my/{id}/cancel")
+        public ApiResponseSever<Void> cancelMyAppointment(
+                @PathVariable UUID id,
+                @RequestParam(required = false) String note
+        ) {
+        appointmentService.cancelMyAppointment(id, note);
+        return ApiResponseSever.ok(null);
+        }
    
 }

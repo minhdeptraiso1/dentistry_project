@@ -34,5 +34,9 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID>, JpaSpec
     })
     List<Invoice> findByPatientId(UUID patientId);
 
+    boolean existsByPrescription_Id(UUID prescriptionId);
+
+    boolean existsByTreatmentPlan_Id(UUID treatmentPlanId);
+
 }
 

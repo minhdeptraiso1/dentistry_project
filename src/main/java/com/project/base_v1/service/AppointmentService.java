@@ -36,4 +36,6 @@ public interface AppointmentService {
     AppointmentResponse createFollowUp(UUID appointmentId, CreateFollowUpAppointmentRequest request);
 
     AppointmentResponse reschedule(UUID appointmentId, LocalDate newDate);
+    
+    void cancelMyAppointment(UUID appointmentId, String note);
 }
