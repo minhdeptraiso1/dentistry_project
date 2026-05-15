@@ -1,110 +1,131 @@
 <!doctype html>
 <html lang="vi">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Thông báo phân công bác sĩ</title>
-  </head>
-  <body
-    style="
+</head>
+<body
+        style="
       margin: 0;
       padding: 0;
       background: #f8fafc;
       font-family: Arial, sans-serif;
       color: #0f172a;
     "
-  >
-    <table
-      role="presentation"
-      width="100%"
-      cellpadding="0"
-      cellspacing="0"
-      style="padding: 24px 12px"
-    >
-      <tr>
+>
+<table
+        role="presentation"
+        width="100%"
+        cellpadding="0"
+        cellspacing="0"
+        style="padding: 24px 12px"
+>
+    <tr>
         <td align="center">
-          <table
-            role="presentation"
-            width="100%"
-            cellpadding="0"
-            cellspacing="0"
-            style="
+            <table
+                    role="presentation"
+                    width="100%"
+                    cellpadding="0"
+                    cellspacing="0"
+                    style="
               max-width: 620px;
               background: #ffffff;
               border: 1px solid #e2e8f0;
               border-radius: 14px;
               overflow: hidden;
             "
-          >
-            <tr>
-              <td
-                style="
+            >
+                <tr>
+                    <td
+                            style="
                   padding: 22px 24px;
                   background: linear-gradient(135deg, #14b8a6 0%, #0284c7 100%);
                   color: #ffffff;
                 "
-              >
-                <h1 style="margin: 0; font-size: 22px">
-                  Thông báo phân công bác sĩ
-                </h1>
-                <p style="margin: 8px 0 0; font-size: 14px; opacity: 0.95">
-                  Nha Khoa Việt Smile
-                </p>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding: 22px 24px">
-                <p style="margin: 0 0 12px">
-                  Xin chào <b th:text="${patientName}">Bệnh nhân</b>,
-                </p>
-                <p style="margin: 0 0 16px; line-height: 1.6">
-                  Lịch khám của bạn đã được phân công bác sĩ. Thông tin chi tiết
-                  như sau:
-                </p>
+                    >
+                        <h1 style="margin: 0; font-size: 22px">
+                            Thông báo phân công bác sĩ
+                        </h1>
+                        <p style="margin: 8px 0 0; font-size: 14px; opacity: 0.95">
+                            Nha Khoa Việt Smile
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 22px 24px">
+                        <p style="margin: 0 0 12px">
+                            Xin chào <b th:text="${patientName}">Bệnh nhân</b>,
+                        </p>
+                        <p style="margin: 0 0 16px; line-height: 1.6">
+                            Lịch khám của bạn đã được phân công bác sĩ. Thông tin chi tiết
+                            như sau:
+                        </p>
 
-                <table
-                  role="presentation"
-                  width="100%"
-                  cellpadding="0"
-                  cellspacing="0"
-                  style="border-collapse: collapse; margin: 0 0 16px"
-                >
-                  <tr>
-                    <td style="padding: 8px 0; color: #64748b; width: 42%">
-                      Mã lịch hẹn
-                    </td>
-                    <td style="padding: 8px 0">
-                      <b th:text="${appointmentCode}">APP001</b>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; color: #64748b">Ngày khám</td>
-                    <td style="padding: 8px 0">
-                      <b th:text="${workDate}">--</b>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; color: #64748b">Ca khám</td>
-                    <td style="padding: 8px 0"><b th:text="${shift}">--</b></td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; color: #64748b">
-                      Bác sĩ phụ trách
-                    </td>
-                    <td style="padding: 8px 0">
-                      <b th:text="${doctorName}">--</b>
-                    </td>
-                  </tr>
-                </table>
+                        <table
+                                role="presentation"
+                                width="100%"
+                                cellpadding="0"
+                                cellspacing="0"
+                                style="border-collapse: collapse; margin: 0 0 16px"
+                        >
+                            <tr>
+                                <td style="padding: 8px 0; color: #64748b; width: 42%">
+                                    Mã lịch hẹn
+                                </td>
+                                <td style="padding: 8px 0">
+                                    <b th:text="${appointmentCode}">APP001</b>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #64748b">Ngày khám</td>
+                                <td style="padding: 8px 0">
+                                    <b th:text="${workDate}">--</b>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #64748b">Ca khám</td>
+                                <td style="padding: 8px 0"><b th:text="${shift}">--</b></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #64748b">
+                                    Bác sĩ phụ trách
+                                </td>
+                                <td style="padding: 8px 0">
+                                    <b th:text="${doctorName}">--</b>
+                                </td>
+                            </tr>
+                        </table>
 
-                <p style="margin: 0; line-height: 1.6">
-                  Vui lòng đến đúng giờ để được hỗ trợ tốt nhất.
-                </p>
-              </td>
-            </tr>
-          </table>
+                        <p style="margin: 0; line-height: 1.6">
+                            Vui lòng đến đúng giờ để được hỗ trợ tốt nhất.
+                        </p>
+                        <div style="margin-top: 20px; text-align: center">
+                            <a
+                                    th:href="${cancelUrl}"
+                                    style="
+                                      display: inline-block;
+                                      background: #ef4444;
+                                      color: #ffffff;
+                                      text-decoration: none;
+                                      padding: 12px 20px;
+                                      border-radius: 10px;
+                                      font-weight: 700;
+                                      font-size: 14px;
+    "
+                            >
+                                Hủy lịch
+                            </a>
+                        </div>
+
+                        <p style="margin: 14px 0 0; color: #64748b; font-size: 13px; line-height: 1.6">
+                            Nếu bạn không muốn hủy lịch, bạn không cần thao tác gì thêm. Lịch khám sẽ được giữ nguyên.
+                        </p>
+                    </td>
+                </tr>
+            </table>
         </td>
-      </tr>
-    </table>
-  </body>
+    </tr>
+</table>
+</body>
 </html>

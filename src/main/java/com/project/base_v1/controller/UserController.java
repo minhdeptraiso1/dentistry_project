@@ -169,6 +169,23 @@ public class UserController {
         return ApiResponseSever.ok(userService.getUserById(id));
     }
 
+    @Operation(
+            summary = "Get user by patient id",
+            description = "Lookup user account by patientId (ADMIN/CASHIER)"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "User not found"),
+            @ApiResponse(responseCode = "403", description = "Access denied")
+    })
+    @PreAuthorize("hasAnyRole('ADMIN','CASHIER')")
+    @GetMapping("/by-patient/{patientId}")
+    public ApiResponseSever<UserDetailResponse> getByPatientId(
+            @PathVariable UUID patientId
+    ) {
+        return ApiResponseSever.ok(userService.getUserByPatientId(patientId));
+    }
+
     @PutMapping("/{id}/password")
     public ApiResponseSever<Void> changePassword(
             @PathVariable UUID id,

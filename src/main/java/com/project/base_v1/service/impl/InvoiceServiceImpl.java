@@ -1,35 +1,11 @@
 package com.project.base_v1.service.impl;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.project.base_v1.dto.request.invoice.CreateInvoiceFromPrescriptionRequest;
-import com.project.base_v1.dto.request.invoice.CreateInvoiceItemRequest;
-import com.project.base_v1.dto.request.invoice.CreateInvoiceRequest;
-import com.project.base_v1.dto.request.invoice.InvoiceSearchRequest;
-import com.project.base_v1.dto.request.invoice.IssueInvoiceRequest;
+import com.project.base_v1.dto.request.invoice.*;
 import com.project.base_v1.dto.request.payment.AddPaymentRequest;
 import com.project.base_v1.dto.response.invoice.InvoiceMyResponse;
 import com.project.base_v1.dto.response.invoice.InvoiceResponse;
 import com.project.base_v1.dto.response.invoice.InvoiceSummaryResponse;
-import com.project.base_v1.entity.Invoice;
-import com.project.base_v1.entity.InvoiceItem;
-import com.project.base_v1.entity.Patient;
-import com.project.base_v1.entity.Payment;
-import com.project.base_v1.entity.ServiceCatalog;
-import com.project.base_v1.entity.TreatmentItem;
-import com.project.base_v1.entity.TreatmentPlan;
-import com.project.base_v1.entity.User;
+import com.project.base_v1.entity.*;
 import com.project.base_v1.enums.InvoiceStatus;
 import com.project.base_v1.enums.PrescriptionStatus;
 import com.project.base_v1.enums.TreatmentItemStatus;
@@ -37,21 +13,25 @@ import com.project.base_v1.enums.UserRole;
 import com.project.base_v1.exception.BusinessException;
 import com.project.base_v1.exception.ErrorCode;
 import com.project.base_v1.mapper.InvoiceMapper;
-import com.project.base_v1.repository.InvoiceRepository;
-import com.project.base_v1.repository.MedicineBatchRepository;
-import com.project.base_v1.repository.PatientRepository;
-import com.project.base_v1.repository.PaymentRepository;
-import com.project.base_v1.repository.PrescriptionRepository;
-import com.project.base_v1.repository.ServiceCatalogRepository;
-import com.project.base_v1.repository.TreatmentPlanRepository;
-import com.project.base_v1.repository.UserRepository;
+import com.project.base_v1.repository.*;
 import com.project.base_v1.repository.spec.InvoiceSpecification;
 import com.project.base_v1.security.CurrentUser;
 import com.project.base_v1.service.InvoiceService;
 import com.project.base_v1.service.NotificationService;
 import com.project.base_v1.service.helper.InvoiceCodeGenerator;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -98,7 +78,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .paidAmount(BigDecimal.ZERO)
                 .build();
 
-        // Nếu có treatmentPlan -> kéo các TreatmentItem DONE
+        // Nếu có treatmentPlan -> kéo TreatmentItem DONE + thuốc đã xuất cùng hồ sơ
         if (request.treatmentPlanId() != null) {
             TreatmentPlan plan = planRepo.findDetailById(request.treatmentPlanId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.TREATMENT_PLAN_NOT_FOUND));
@@ -107,14 +87,21 @@ public class InvoiceServiceImpl implements InvoiceService {
             if (!plan.getPatient().getId().equals(patient.getId())) {
                 throw new BusinessException(ErrorCode.BAD_REQUEST);
             }
+            
+            if (invoiceRepo.existsByTreatmentPlan_Id(plan.getId())) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST);
+            }
 
             invoice.setTreatmentPlan(plan);
 
-            List<InvoiceItem> items = new ArrayList<>();
-            for (TreatmentItem ti : plan.getItems()) {
-                if (ti.getStatus() != TreatmentItemStatus.DONE) continue;
+            List<InvoiceItem> treatmentItems = new ArrayList<>();
 
-                items.add(InvoiceItem.builder()
+            for (TreatmentItem ti : plan.getItems()) {
+                if (ti.getStatus() != TreatmentItemStatus.DONE) {
+                    continue;
+                }
+
+                treatmentItems.add(InvoiceItem.builder()
                         .id(UUID.randomUUID())
                         .invoice(invoice)
                         .service(ti.getService())
@@ -123,21 +110,25 @@ public class InvoiceServiceImpl implements InvoiceService {
                         .serviceType(ti.getServiceType())
                         .quantity(ti.getQuantity())
                         .unitPrice(ti.getUnitPrice())
-                        .discountAmount(ti.getDiscountAmount())
+                        .discountAmount(ti.getDiscountAmount() != null ? ti.getDiscountAmount() : BigDecimal.ZERO)
                         .lineTotal(ti.getLineTotal())
                         .note(ti.getNote())
                         .build());
             }
 
-            if (items.isEmpty() && (request.items() == null || request.items().isEmpty())) {
-                throw new BusinessException(ErrorCode.INVOICE_ITEMS_REQUIRED);
-            }
-            invoice.getItems().addAll(items);
+            invoice.getItems().addAll(treatmentItems);
+
+            List<InvoiceItem> medicineItems = toDispensedPrescriptionItemsByTreatmentPlan(invoice, plan);
+            invoice.getItems().addAll(medicineItems);
         }
 
         // Nếu client gửi items thủ công (không kéo từ plan hoặc muốn bổ sung)
         if (request.items() != null && !request.items().isEmpty()) {
             invoice.getItems().addAll(toManualItems(invoice, request.items()));
+        }
+
+        if (invoice.getItems().isEmpty()) {
+            throw new BusinessException(ErrorCode.INVOICE_ITEMS_REQUIRED);
         }
 
         // giảm giá toàn hóa đơn (optional)
@@ -203,6 +194,10 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         var rx = rxRepo.findDetailById(request.prescriptionId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRESCRIPTION_NOT_FOUND));
+
+        if (invoiceRepo.existsByPrescription_Id(rx.getId())) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST);
+        }
 
         if (rx.getStatus() != PrescriptionStatus.DISPENSED) {
             throw new BusinessException(ErrorCode.PRESCRIPTION_INVALID_STATUS);
@@ -386,20 +381,6 @@ public class InvoiceServiceImpl implements InvoiceService {
         return items;
     }
 
-    @Override
-    public Page<InvoiceSummaryResponse> search(InvoiceSearchRequest request, Pageable pageable) {
-
-        Specification<Invoice> spec = Specification.allOf(
-                InvoiceSpecification.hasPatientId(request.patientId()),
-                InvoiceSpecification.hasStatus(request.status()),
-                InvoiceSpecification.createdFrom(request.fromDate()),
-                InvoiceSpecification.createdTo(request.toDate())
-        );
-
-        return invoiceRepo.findAll(spec, pageable)
-                .map(mapper::toSummary);
-    }
-
 
     private void recalcAmounts(Invoice invoice, BigDecimal invoiceDiscount) {
         BigDecimal subtotal = invoice.getItems().stream()
@@ -419,6 +400,92 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoice.setDiscountAmount(totalDiscount);
         invoice.setTotalAmount(total);
         // paidAmount giữ nguyên (create = 0)
+    }
+
+    private List<InvoiceItem> toDispensedPrescriptionItemsByTreatmentPlan(
+            Invoice invoice,
+            TreatmentPlan plan
+    ) {
+        List<InvoiceItem> items = new ArrayList<>();
+
+        List<Prescription> prescriptions =
+                rxRepo.findByMedicalRecord_IdAndPatient_IdAndStatusOrderByCreatedAtDesc(
+                        plan.getMedicalRecord().getId(),
+                        plan.getPatient().getId(),
+                        PrescriptionStatus.DISPENSED
+                );
+
+        if (prescriptions.isEmpty()) {
+            return items;
+        }
+
+        Prescription linkedPrescription = null;
+
+        for (Prescription rx : prescriptions) {
+
+            // Đơn thuốc đã có hóa đơn rồi thì bỏ qua, tránh tính tiền thuốc 2 lần
+            if (invoiceRepo.existsByPrescription_Id(rx.getId())) {
+                continue;
+            }
+
+            if (linkedPrescription == null) {
+                linkedPrescription = rx;
+            }
+
+            for (var pi : rx.getItems()) {
+                BigDecimal unitPrice = pi.getMedicine().getSalePrice();
+
+                if (unitPrice == null) {
+                    throw new BusinessException(ErrorCode.MEDICINE_PRICE_NOT_SET);
+                }
+
+                int qty = (pi.getQuantity() == null || pi.getQuantity() <= 0)
+                        ? 1
+                        : pi.getQuantity();
+
+                BigDecimal lineTotal = unitPrice.multiply(BigDecimal.valueOf(qty));
+
+                items.add(InvoiceItem.builder()
+                        .id(UUID.randomUUID())
+                        .invoice(invoice)
+                        .service(null)
+                        .itemName("Thuốc: " + pi.getMedicineName())
+                        .serviceCode(pi.getMedicineCode())
+                        .serviceType("MEDICINE")
+                        .quantity(qty)
+                        .unitPrice(unitPrice)
+                        .discountAmount(BigDecimal.ZERO)
+                        .lineTotal(lineTotal)
+                        .note(
+                                "Đơn thuốc: " + rx.getPrescriptionCode()
+                                        + (pi.getDosage() != null ? " - " + pi.getDosage() : "")
+                        )
+                        .build());
+            }
+        }
+
+        // Invoice hiện tại chỉ link được 1 prescription.
+        // Link đơn đầu tiên chưa có hóa đơn.
+        if (linkedPrescription != null) {
+            invoice.setPrescription(linkedPrescription);
+        }
+
+        return items;
+    }
+    //=========================================================================================
+
+    @Override
+    public Page<InvoiceSummaryResponse> search(InvoiceSearchRequest request, Pageable pageable) {
+
+        Specification<Invoice> spec = Specification.allOf(
+                InvoiceSpecification.hasPatientId(request.patientId()),
+                InvoiceSpecification.hasStatus(request.status()),
+                InvoiceSpecification.createdFrom(request.fromDate()),
+                InvoiceSpecification.createdTo(request.toDate())
+        );
+
+        return invoiceRepo.findAll(spec, pageable)
+                .map(mapper::toSummary);
     }
 
     @Override
